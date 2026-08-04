@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ restaurant_name }} - Menu</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root { --primary: #ff4757; --accent-green: #2ed573; --accent-blue: #1e90ff; --bg-body: #f8f9fa; --text-dark: #2d3436; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--bg-body); color: var(--text-dark); padding-bottom: 90px; }
+        .container { max-width: 1000px; margin: 0 auto; padding: 15px; }
+
+        .lang-container { display: flex; justify-content: flex-end; margin-bottom: 15px; }
+        .lang-select { padding: 8px 16px; border-radius: 20px; border: 2px solid var(--accent-blue); font-weight: 600; background: #fff; color: var(--accent-blue); cursor: pointer; outline: none; }
+
+        header { background: linear-gradient(135deg, #ff4757, #ff6b81); color: white; padding: 30px 20px; text-align: center; border-radius: 20px; box-shadow: 0 10px 20px rgba(255, 71, 87, 0.25); margin-bottom: 20px; }
+        header h1 { font-size: 2.2rem; font-weight: 800; }
+        header p { margin: 8px 0 12px 0; opacity: 0.95; font-size: 0.95rem; }
+        .admin-login-link { color: white; text-decoration: underline; font-weight: 600; font-size: 0.85rem; cursor: pointer; background: rgba(0, 0, 0, 0.2); padding: 6px 16px; border-radius: 15px; display: inline-block; }
+
+        .order-type-switch { display: flex; gap: 10px; margin-bottom: 20px; background: #e2e8f0; padding: 6px; border-radius: 14px; }
+        .type-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: 700; font-size: 0.95rem; cursor: pointer; background: transparent; color: #4a5568; transition: 0.3s; }
+        .type-btn.active { background: white; color: var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+
+        .panel { background: white; border-radius: 18px; padding: 20px; margin-bottom: 25px; box-shadow: 0 6px 18px rgba(0,0,0,0.04); border-top: 4px solid var(--accent-blue); }
+        .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 12px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #4a5568; }
+        .input-style { width: 100%; padding: 12px; border: 2px solid #eef2f5; background: #f8f9fa; border-radius: 10px; outline: none; font-size: 0.95rem; transition: 0.3s; }
+        .input-style:focus { border-color: var(--primary); background: #fff; }
+
+        .location-btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        .gps-btn { width: 100%; background: #1e90ff; color: white; border: none; padding: 12px; border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(30,144,255,0.25); transition: 0.2s; }
+        .gps-btn:active { transform: scale(0.98); }
+
+        .food-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .zomato-card { background: white; border-radius: 18px; overflow: hidden; box-shadow: 0 6px 18px rgba(0,0,0,0.06); cursor: pointer; transition: transform 0.3s ease; position: relative; }
+        .zomato-card:hover { transform: translateY(-5px); }
+
+        .card-img-wrapper { position: relative; height: 180px; width: 100%; overflow: hidden; }
+        .card-img { width: 100%; height: 100%; object-fit: cover; }
+
+        .rating-badge { position: absolute; bottom: 12px; right: 12px; background: #24963f; color: white; padding: 3px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; }
+        .card-info { padding: 15px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; color: var(--text-dark); margin-bottom: 4px; }
+        .card-sub { font-size: 0.85rem; color: #747d8c; margin-bottom: 10px; }
+        .card-footer { display: flex; justify-content: space-between; align-items: center; }
+        .card-price { font-size: 1.2rem; font-weight: 800; color: var(--primary); }
+        .open-btn { background: #ffeaa7; color: #d35400; padding: 6px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; border: none; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: none; justify-content: flex-end; z-index: 1000; backdrop-filter: blur(3px); }
+        .sidebar-modal { background: white; width: 100%; max-width: 420px; height: 100%; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; justify-content: space-between; }
+        .modal-close-btn { align-self: flex-end; background: #f1f2f6; border: none; width: 32px; height: 32px; border-radius: 50%; font-weight: bold; cursor: pointer; }
+        .modal-img { width: 100%; height: 200px; object-fit: cover; border-radius: 16px; margin: 15px 0; }
+
+        .cart-panel { border-top-color: var(--accent-green); }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #e2e8f0; }
+        .remove-btn { background: var(--primary); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; font-weight: bold; }
+        .total-box { display: flex; justify-content: space-between; font-size: 1.3rem; font-weight: 800; color: var(--accent-green); margin-top: 15px; }
+        .submit-btn { width: 100%; background: var(--accent-green); color: white; border: none; padding: 14px; font-weight: 700; font-size: 1.1rem; border-radius: 12px; cursor: pointer; }
+
+        .pay-radio-group { display: flex; gap: 20px; margin-top: 10px; font-weight: 600; }
+        .pay-qr { width: 160px; height: 160px; border-radius: 12px; border: 2px solid var(--accent-blue); padding: 5px; background: white; margin-top: 10px; }
+
+        .stars .star { font-size: 2rem; color: #cbd5e0; cursor: pointer; }
+        .stars .star.selected { color: #ffa502; }
+
+        @media(max-width: 600px) { .input-row { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div class="lang-container">
+        <select id="langSelect" class="lang-select" onchange="changeLanguage(this.value)">
+            <option value="en" selected>🌐 English</option>
+            <option value="gu">🌐 ગુજરાતી (Gujarati)</option>
+            <option value="hi">🌐 हिंदी (Hindi)</option>
+        </select>
+    </div>
+
+    <header>
+        <h1>🍔 {{ restaurant_name }} 🥤</h1>
+        <p id="t-subtitle">Fresh & Delicious Food, Straight to Your Table!</p>
+        <span class="admin-login-link" onclick="openAdminLogin()" id="t-admin-link">🔒 Admin Login</span>
+    </header>
+
+    <div class="order-type-switch">
+        <button class="type-btn active" id="btn-offline" onclick="switchOrderType('Offline')">🍽️ Offline (Dine-In)</button>
+        <button class="type-btn" id="btn-online" onclick="switchOrderType('Online')">🛵 Online (Home Delivery)</button>
+    </div>
+
+    <div class="panel details-panel">
+        <h3 id="t-cust-header">👤 1. Enter Delivery Address</h3>
+        <p style="font-size: 0.85rem; color: #747d8c; margin-bottom: 15px;" id="t-cust-sub">Please enter your details below to start ordering</p>
+        
+        <div class="input-row">
+            <div class="form-group">
+                <label for="cust-name" id="t-label-name">Name</label>
+                <input type="text" id="cust-name" class="input-style" placeholder="Enter full name">
+            </div>
+
+            <div class="form-group" id="offline-field">
+                <label for="table-num" id="t-label-table">Table Number</label>
+                <input type="number" id="table-num" class="input-style" placeholder="Table No" min="1">
+            </div>
+
+            <div class="form-group" id="online-phone-field" style="display: none;">
+                <label for="cust-phone" id="t-label-phone">Contact Number</label>
+                <input type="text" id="cust-phone" class="input-style" placeholder="Contact Number">
+            </div>
+        </div>
+
+        <div id="online-address-field" style="display: none;">
+            <div style="margin: 15px 0 10px 0; font-weight:700; color:#1e90ff;">📍 Address Details</div>
+
+            <div class="form-group">
+                <label>House no. / Building name (Optional)</label>
+                <input type="text" id="addr-house" class="input-style" placeholder="House No / Building Name">
+            </div>
+
+            <div class="form-group">
+                <label>Road name / Area / Colony <span style="color:red;">*</span></label>
+                <input type="text" id="addr-area" class="input-style" placeholder="Road Name / Area Name" onchange="autoCalculateFromArea()" onkeyup="autoCalculateDebounce()">
+            </div>
+
+            <div class="input-row">
+                <div class="form-group">
+                    <label>Pincode (Optional)</label>
+                    <input type="text" id="addr-pincode" class="input-style" placeholder="Pincode">
+                </div>
+
+                <div class="form-group">
+                    <label>City</label>
+                    <input type="text" id="addr-city" class="input-style" value="Rajkot">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Nearby Famous Place / Shop / School (Optional)</label>
+                <input type="text" id="addr-landmark" class="input-style" placeholder="Nearby Famous Place / Landmark">
+            </div>
+
+            <div class="location-btn-group">
+                <button type="button" class="gps-btn" id="gps-btn-id" onclick="detectLiveGPSLocation()">
+                    🎯 Use Live Location
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <h2 id="t-menu-header" style="margin-bottom: 15px; color: #2f3542;">📋 2. Our Special Menu</h2>
+
+    <div class="food-grid">
+        {% for item in items %}
+        <div class="zomato-card" onclick="openItemModal('{{ item.id }}', '{{ item.name_en }}', '{{ item.name_gu }}', '{{ item.price }}')">
+            <div class="card-img-wrapper">
+                {% if "burger" in item.name_en.lower() %}
+                    <img src="https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=500&auto=format&fit=crop&q=80" class="card-img">
+                {% elif "sandwich" in item.name_en.lower() %}
+                    <img src="https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=500&auto=format&fit=crop&q=80" class="card-img">
+                {% elif "coco" in item.name_en.lower() or "drink" in item.name_en.lower() %}
+                    <img src="https://images.unsplash.com/photo-1541658016709-82535e94bc69?w=500&auto=format&fit=crop&q=80" class="card-img">
+                {% else %}
+                    <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=80" class="card-img">
+                {% endif %}
+                <span class="rating-badge">★ 4.3</span>
+            </div>
+            <div class="card-info">
+                <div class="card-title">{{ item.name_en }}</div>
+                <div class="card-sub">{{ item.name_gu }}</div>
+                <div class="card-footer">
+                    <span class="card-price">₹ {{ item.price }}</span>
+                    <button class="open-btn t-add-btn">Customise & Add ➔</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="panel cart-panel">
+        <h3 id="t-cart-header">🛒 Your Order Cart</h3>
+        <p style="font-size: 0.85rem; color: #747d8c; margin-bottom: 12px;" id="t-cart-sub">Items added to your cart will appear here</p>
+        <div id="cart-items-list">
+            <p style="color: #747d8c; font-style: italic; margin: 0;" id="t-empty-cart">Cart is empty. Add items above!</p>
+        </div>
+
+        <div class="form-group" style="margin-top: 15px;">
+            <label for="order-notes" id="t-label-notes">✏️ Special Instructions:</label>
+            <input type="text" id="order-notes" class="input-style" placeholder="Special Instructions">
+        </div>
+        
+        <div class="total-box">
+            <span id="t-total-label">Total Amount:</span>
+            <span id="cart-total">₹ 0</span>
+        </div>
+
+        <div id="checkout-container">
+            <div style="margin-top: 15px;">
+                <label style="font-weight: 700;" id="t-pay-title">💳 Payment Method:</label>
+                <div class="pay-radio-group">
+                    <label style="color: var(--accent-green);">
+                        <input type="radio" name="payment_mode" value="Cash" checked onclick="togglePaymentMode('Cash')"> <span id="t-pay-cash">💵 Cash</span>
+                    </label>
+                    <label style="color: var(--accent-blue);">
+                        <input type="radio" name="payment_mode" value="Online" onclick="togglePaymentMode('Online')"> <span id="t-pay-online">💳 Online UPI</span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="qr-wrapper" style="display: none; margin-top: 15px;">
+                <p style="margin-bottom: 5px; font-weight: 600;" id="t-qr-text">👉 Scan QR Code to Pay Total Amount</p>
+                <img src="" id="dynamic-qr" alt="Pay QR" class="pay-qr">
+            </div>
+
+            <button id="main-submit-btn" class="submit-btn" style="margin-top: 20px;" onclick="saveOrderToBackend(event)">
+                Confirm & Place Order 🚀
+            </button>
+        </div>
+    </div>
+
+    <div class="panel" style="border-top-color: #ffa502; margin-top: 20px;">
+        <h3 id="t-rev-header">⭐ Customer Review & Feedback</h3>
+        <p style="font-size: 0.85rem; color: #747d8c; margin-bottom: 12px;" id="t-rev-sub">Give us your valuable feedback about our food and service!</p>
+        
+        <div class="form-group">
+            <label id="t-rev-rating">Give Rating:</label>
+            <div class="stars" id="global-stars">
+                <span class="star" onclick="setGlobalRating(1)">★</span>
+                <span class="star" onclick="setGlobalRating(2)">★</span>
+                <span class="star" onclick="setGlobalRating(3)">★</span>
+                <span class="star" onclick="setGlobalRating(4)">★</span>
+                <span class="star" onclick="setGlobalRating(5)">★</span>
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 10px;">
+            <label id="t-rev-comment">Your Message:</label>
+            <input type="text" id="global-comment" class="input-style" placeholder="Your Message">
+        </div>
+
+        <button class="submit-btn" style="background: #ffa502; margin-top: 12px;" id="t-btn-rev-submit" onclick="submitGeneralReview()">
+            Submit Review
+        </button>
+    </div>
+
+</div>
+
+<div class="modal-overlay" id="itemModalOverlay">
+    <div class="sidebar-modal">
+        <div>
+            <button class="modal-close-btn" onclick="closeItemModal()">✕</button>
+            <img id="m-img" src="" class="modal-img">
+            <div class="modal-title" id="m-title" style="font-weight:700; font-size:1.2rem;">Food Name</div>
+            <div class="modal-price" id="m-price" style="color:var(--primary); font-weight:800; font-size:1.1rem; margin-bottom:15px;">₹ 0</div>
+
+            <div class="option-group" style="margin-bottom:15px;">
+                <label id="t-modal-spicy-label" style="font-size:0.85rem; font-weight:600;">🌶️ Customise taste:</label>
+                <select id="modal-spicy-select" class="input-style" style="margin-top:5px;">
+                    <option value="Medium">🌶️ Medium Spicy</option>
+                    <option value="Mild">🟢 Less Spicy / Jain</option>
+                    <option value="High">🔥 Extra Spicy</option>
+                </select>
+            </div>
+
+            <div class="option-group">
+                <label id="t-modal-qty-label" style="font-size:0.85rem; font-weight:600;">🔢 Quantity:</label>
+                <div style="display: flex; align-items: center; gap: 15px; background: #f1f2f6; padding: 6px 15px; border-radius: 10px; width: fit-content; margin-top:5px;">
+                    <button style="border:none; background:none; font-size:1.4rem; font-weight:bold; cursor:pointer;" onclick="changeModalQty(-1)">-</button>
+                    <span id="modal-qty-val" style="font-weight:bold; font-size:1.1rem;">1</span>
+                    <button style="border:none; background:none; font-size:1.4rem; font-weight:bold; cursor:pointer;" onclick="changeModalQty(1)">+</button>
+                </div>
+            </div>
+        </div>
+
+        <button class="submit-btn" style="background: var(--primary);" id="t-modal-add-btn" onclick="confirmAddFromModal()">Add Item To Cart 🛒</button>
+    </div>
+</div>
+
+<script>
+    window.cart = {};
+    let globalTotal = 0;
+    let currentLang = 'en';
+    let selectedOrderType = 'Offline';
+    let currentModalItem = {};
+
+    // 📍 SHOP LOCATION: Bhole Pan & Cold drinks, Kankot, Rajkot
+    const RESTAURANT_LAT = 22.2471;
+    const RESTAURANT_LNG = 70.7601;
+
+    let userDistanceKM = 0;
+    let userDeliveryCharge = 0;
+    let debounceTimer;
+
+    const translations = {
+        en: {
+            subtitle: "Fresh & Delicious Food, Straight to Your Table!",
+            adminLink: "🔒 Admin Login",
+            btnOffline: "🍽️ Offline (Dine-In)",
+            btnOnline: "🛵 Online (Home Delivery)",
+            custHeader: "👤 1. Enter Delivery Address",
+            custSub: "Please enter your details below to start ordering",
+            labelName: "Name",
+            labelTable: "Table Number",
+            labelPhone: "Contact Number",
+            labelAddress: "Delivery Address Details",
+            menuHeader: "📋 2. Our Special Menu",
+            addBtn: "Customise & Add ➔",
+            cartHeader: "🛒 Your Order Cart",
+            cartSub: "Items added to your cart will appear here",
+            emptyCart: "Cart is empty. Add items above!",
+            labelNotes: "✏️ Special Instructions:",
+            totalLabel: "Total Amount:",
+            payTitle: "💳 Payment Method:",
+            payCash: "💵 Cash",
+            payOnline: "💳 Online UPI",
+            qrText: "👉 Scan QR Code to Pay Total Amount",
+            btnSubmit: "Confirm & Place Order 🚀",
+            revHeader: "⭐ Customer Review & Feedback",
+            revSub: "Give us your valuable feedback about our food and service!",
+            revRating: "Give Rating:",
+            revComment: "Your Message:",
+            btnRevSubmit: "Submit Review",
+            modalSpicy: "🌶️ Customise taste:",
+            modalQty: "🔢 Quantity:",
+            modalAdd: "Add Item To Cart 🛒"
+        },
+        gu: {
+            subtitle: "તાજી અને સ્વાદિષ્ટ વાનગીઓ સીધી તમારા ટેબલ પર!",
+            adminLink: "🔒 Admin Login (માલિક માટે)",
+            btnOffline: "🍽️ Offline (Dine-In / ટેબલ ઓર્ડર)",
+            btnOnline: "🛵 Online (Home Delivery / પાર્સલ)",
+            custHeader: "👤 1. ડિલિવરી સરનામું લખો",
+            custSub: "ઓર્ડર શરૂ કરવા માટે તમારી માહિતી ભરો",
+            labelName: "નામ",
+            labelTable: "ટેબલ નંબર",
+            labelPhone: "મોબાઈલ નંબર",
+            labelAddress: "ડિલિવરી સરનામું",
+            menuHeader: "📋 2. અમારું ખાસ મેનૂ",
+            addBtn: "પસંદ કરો અને ઉમેરો ➔",
+            cartHeader: "🛒 તમારી ઓર્ડર ટોપલી",
+            cartSub: "તમે પસંદ કરેલી વાનગીઓ અહીં દેખાશે",
+            emptyCart: "ટોપલી ખાલી છે! ઉપરથી વાનગી ઉમેરો.",
+            labelNotes: "✏️ રસોડા માટે ખાસ નોંધ:",
+            totalLabel: "કુલ રકમ:",
+            payTitle: "💳 પેમેન્ટની રીત પસંદ કરો:",
+            payCash: "💵 Cash (રોકડ)",
+            payOnline: "💳 Online UPI",
+            qrText: "👉 ચૂકવણી કરવા માટે QR કોડ સ્કેન કરો",
+            btnSubmit: "ઓર્ડર કન્ફર્મ કરો 🚀",
+            revHeader: "⭐ તમારો કિંમતી અભિપ્રાય",
+            revSub: "અમારી વાનગી અને સર્વિસ વિશે રિવ્યુ આપો!",
+            revRating: "રેટિંગ આપો:",
+            revComment: "તમારો સંદેશ:",
+            btnRevSubmit: "રિવ્યુ મોકલો",
+            modalSpicy: "🌶️ સ્વાદ પસંદ કરો:",
+            modalQty: "🔢 જથ્થો:",
+            modalAdd: "ટોપલીમાં ઉમેરો 🛒"
+        }
+    };
+
+    // 💰 REASONABLE LOW DELIVERY FEE SLABS
+    function calculateSlabFee(km) {
+        if (km <= 0) return 0;
+        if (km <= 3.0) return 10;  // Up to 3 KM: ₹10
+        if (km <= 6.0) return 20;  // Up to 6 KM: ₹20
+        if (km <= 10.0) return 30; // Up to 10 KM: ₹30
+        // Above 10 KM: ₹30 + ₹5 per extra KM
+        return 30 + Math.ceil(km - 10.0) * 5;
+    }
+
+    function getExactRoadDistance(destLat, destLon) {
+        let osrmUrl = `https://router.project-osrm.org/route/v1/driving/${RESTAURANT_LNG},${RESTAURANT_LAT};${destLon},${destLat}?overview=false&alternatives=true`;
+
+        return fetch(osrmUrl)
+            .then(res => res.json())
+            .then(data => {
+                if (data.routes && data.routes.length > 0) {
+                    let shortestMeters = data.routes[0].distance;
+                    for (let i = 1; i < data.routes.length; i++) {
+                        if (data.routes[i].distance < shortestMeters) {
+                            shortestMeters = data.routes[i].distance;
+                        }
+                    }
+                    return parseFloat((shortestMeters / 1000).toFixed(1));
+                }
+                return null;
+            })
+            .catch(() => null);
+    }
+
+    function autoCalculateDebounce() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            autoCalculateFromArea();
+        }, 1200);
+    }
+
+    function autoCalculateFromArea() {
+        let area = document.getElementById('addr-area').value.trim();
+        let city = document.getElementById('addr-city').value.trim() || "Rajkot";
+
+        if (!area || area.length < 3) return;
+
+        let searchQuery = `${area}, ${city}, Gujarat`;
+
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}`)
+            .then(res => res.json())
+            .then(data => {
+                let lat, lon;
+                if (data && data.length > 0) {
+                    lat = parseFloat(data[0].lat);
+                    lon = parseFloat(data[0].lon);
+                } else {
+                    lat = 22.2882;
+                    lon = 70.7670;
+                }
+
+                getExactRoadDistance(lat, lon).then(exactRoadKM => {
+                    userDistanceKM = exactRoadKM || 3.5;
+                    userDeliveryCharge = calculateSlabFee(userDistanceKM);
+                    updateCartUI();
+                });
+            })
+            .catch(() => {
+                userDistanceKM = 3.5;
+                userDeliveryCharge = 20;
+                updateCartUI();
+            });
+    }
+
+    // 🎯 LIVE GPS LOCATION WITH FULL AUTO-FILL
+    function detectLiveGPSLocation() {
+        let gpsBtn = document.getElementById('gps-btn-id');
+        gpsBtn.innerText = "⏳ Detecting Location...";
+        gpsBtn.disabled = true;
+
+        if (!navigator.geolocation) {
+            Swal.fire({ icon: 'error', title: 'GPS Not Supported', text: 'Geolocation is not supported.' });
+            gpsBtn.innerText = "🎯 Use Live Location";
+            gpsBtn.disabled = false;
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                let lat = position.coords.latitude;
+                let lon = position.coords.longitude;
+
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=en`)
+                    .then(res => res.json())
+                    .then(data => {
+                        let addr = data.address || {};
+
+                        let houseVal = addr.building || addr.house_number || addr.amenity || '';
+                        let areaVal = addr.suburb || addr.neighbourhood || addr.residential || addr.road || addr.village || 'Rajkot';
+                        let pinVal = addr.postcode || '';
+                        let cityVal = addr.city || addr.town || addr.county || 'Rajkot';
+
+                        document.getElementById('addr-house').value = houseVal;
+                        document.getElementById('addr-area').value = areaVal;
+                        document.getElementById('addr-pincode').value = pinVal;
+                        document.getElementById('addr-city').value = cityVal;
+
+                        getExactRoadDistance(lat, lon).then(exactRoadKM => {
+                            userDistanceKM = exactRoadKM || 1.0;
+                            userDeliveryCharge = calculateSlabFee(userDistanceKM);
+                            updateCartUI();
+
+                            gpsBtn.innerText = "🎯 Use Live Location";
+                            gpsBtn.disabled = false;
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: '📍 Location Detected!',
+                                text: 'Address details have been filled automatically.'
+                            });
+                        });
+                    })
+                    .catch(() => {
+                        gpsBtn.innerText = "🎯 Use Live Location";
+                        gpsBtn.disabled = false;
+                    });
+            },
+            () => {
+                Swal.fire({ icon: 'warning', title: 'GPS Permission Needed', text: 'Please allow location permission in your browser.' });
+                gpsBtn.innerText = "🎯 Use Live Location";
+                gpsBtn.disabled = false;
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    }
+
+    function changeLanguage(lang) {
+        currentLang = lang;
+        const t = translations[lang] || translations['en'];
+
+        document.getElementById('t-subtitle').innerText = t.subtitle;
+        document.getElementById('t-admin-link').innerText = t.adminLink;
+        document.getElementById('btn-offline').innerText = t.btnOffline;
+        document.getElementById('btn-online').innerText = t.btnOnline;
+        document.getElementById('t-cust-header').innerText = t.custHeader;
+        document.getElementById('t-cust-sub').innerText = t.custSub;
+        document.getElementById('t-label-name').innerText = t.labelName;
+        document.getElementById('t-label-table').innerText = t.labelTable;
+        document.getElementById('t-label-phone').innerText = t.labelPhone;
+        document.getElementById('t-menu-header').innerText = t.menuHeader;
+
+        document.querySelectorAll('.t-add-btn').forEach(btn => btn.innerText = t.addBtn);
+
+        document.getElementById('t-cart-header').innerText = t.cartHeader;
+        document.getElementById('t-cart-sub').innerText = t.cartSub;
+        
+        let emptyCartEl = document.getElementById('t-empty-cart');
+        if(emptyCartEl) emptyCartEl.innerText = t.emptyCart;
+
+        document.getElementById('t-label-notes').innerText = t.labelNotes;
+        document.getElementById('t-total-label').innerText = t.totalLabel;
+        document.getElementById('t-pay-title').innerText = t.payTitle;
+        document.getElementById('t-pay-cash').innerText = t.payCash;
+        document.getElementById('t-pay-online').innerText = t.payOnline;
+        document.getElementById('t-qr-text').innerText = t.qrText;
+        document.getElementById('main-submit-btn').innerText = t.btnSubmit;
+    }
+
+    function switchOrderType(type) {
+        selectedOrderType = type;
+        document.getElementById('btn-offline').classList.toggle('active', type === 'Offline');
+        document.getElementById('btn-online').classList.toggle('active', type === 'Online');
+
+        if (type === 'Offline') {
+            document.getElementById('offline-field').style.display = 'block';
+            document.getElementById('online-phone-field').style.display = 'none';
+            document.getElementById('online-address-field').style.display = 'none';
+            userDeliveryCharge = 0;
+            userDistanceKM = 0;
+        } else {
+            document.getElementById('offline-field').style.display = 'none';
+            document.getElementById('online-phone-field').style.display = 'block';
+            document.getElementById('online-address-field').style.display = 'block';
+        }
+        updateCartUI();
+    }
+
+    function openItemModal(id, nameEn, nameGu, price) {
+        currentModalItem = { id, nameEn, price: parseFloat(price) };
+        document.getElementById('m-title').innerText = `${nameEn} (${nameGu})`;
+        document.getElementById('m-price').innerText = `₹ ${price}`;
+        document.getElementById('modal-qty-val').innerText = '1';
+
+        let imgSrc = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=80";
+        let lower = nameEn.toLowerCase();
+        if (lower.includes("burger")) imgSrc = "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=500&auto=format&fit=crop&q=80";
+        if (lower.includes("sandwich")) imgSrc = "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=500&auto=format&fit=crop&q=80";
+
+        document.getElementById('m-img').src = imgSrc;
+        document.getElementById('itemModalOverlay').style.display = 'flex';
+    }
+
+    function closeItemModal() { document.getElementById('itemModalOverlay').style.display = 'none'; }
+
+    function changeModalQty(diff) {
+        let el = document.getElementById('modal-qty-val');
+        let current = parseInt(el.innerText);
+        if (current + diff >= 1) el.innerText = current + diff;
+    }
+
+    function confirmAddFromModal() {
+        let spicyVal = document.getElementById('modal-spicy-select').value;
+        let qty = parseInt(document.getElementById('modal-qty-val').innerText);
+        
+        let cartKey = currentModalItem.id + "_" + spicyVal;
+        if (window.cart[cartKey]) { window.cart[cartKey].qty += qty; }
+        else { window.cart[cartKey] = { name: currentModalItem.nameEn, price: currentModalItem.price, qty: qty, spicy: spicyVal }; }
+        
+        updateCartUI();
+        closeItemModal();
+    }
+
+    function removeFromCart(key) {
+        if (window.cart[key]) { delete window.cart[key]; }
+        updateCartUI();
+    }
+
+    function togglePaymentMode(mode) {
+        let qrWrapper = document.getElementById('qr-wrapper');
+        if (qrWrapper) qrWrapper.style.display = (mode === 'Online' && globalTotal > 0) ? 'block' : 'none';
+    }
+
+    function updateCartUI() {
+        let listContainer = document.getElementById('cart-items-list');
+        let totalEl = document.getElementById('cart-total');
+        if (!listContainer || !totalEl) return;
+
+        listContainer.innerHTML = "";
+        let foodTotal = 0;
+
+        let keys = Object.keys(window.cart);
+        if (keys.length === 0) {
+            let tEmpty = translations[currentLang].emptyCart;
+            listContainer.innerHTML = `<p style="color: #747d8c; font-style: italic; margin:0;" id="t-empty-cart">${tEmpty}</p>`;
+            totalEl.innerText = "₹ 0";
+            togglePaymentMode('Cash');
+            return;
+        }
+
+        keys.forEach(key => {
+            let item = window.cart[key];
+            let itemTotal = item.price * item.qty;
+            foodTotal += itemTotal;
+
+            listContainer.innerHTML += `
+                <div class="cart-item">
+                    <span><strong>${item.name}</strong> (${item.spicy}) (x${item.qty})</span>
+                    <span>₹${itemTotal} <button class="remove-btn" onclick="removeFromCart('${key}')">×</button></span>
+                </div>
+            `;
+        });
+
+        if (selectedOrderType === 'Online' && userDeliveryCharge > 0) {
+            listContainer.innerHTML += `
+                <div class="cart-item" style="color: #1e90ff; font-weight: bold;">
+                    <span>🚚 Delivery Charge</span>
+                    <span>+ ₹${userDeliveryCharge}</span>
+                </div>
+            `;
+        }
+
+        globalTotal = foodTotal + (selectedOrderType === 'Online' ? userDeliveryCharge : 0);
+
+        totalEl.innerText = "₹ " + globalTotal;
+        let qrImg = document.getElementById('dynamic-qr');
+        if (qrImg) qrImg.src = `/get-cart-qr?amount=${globalTotal}`;
+        
+        let selectedPayMode = document.querySelector('input[name="payment_mode"]:checked');
+        togglePaymentMode(selectedPayMode ? selectedPayMode.value : 'Cash');
+    }
+
+    function saveOrderToBackend(event) {
+        if (event) event.preventDefault(); 
+        let nameVal = document.getElementById('cust-name').value.trim();
+        let tableVal = document.getElementById('table-num').value.trim();
+        let phoneVal = document.getElementById('cust-phone').value.trim();
+        
+        let house = document.getElementById('addr-house').value.trim();
+        let area = document.getElementById('addr-area').value.trim();
+        let pincode = document.getElementById('addr-pincode').value.trim();
+        let city = document.getElementById('addr-city').value.trim();
+        let landmark = document.getElementById('addr-landmark').value.trim();
+        
+        let addressParts = [];
+        if (house) addressParts.push(house);
+        if (area) addressParts.push(area);
+        if (landmark) addressParts.push(landmark);
+        if (city) addressParts.push(city);
+        if (pincode) addressParts.push(pincode);
+
+        let fullAddressVal = addressParts.join(', ');
+        let notesVal = document.getElementById('order-notes').value.trim();
+        let payModeElem = document.querySelector('input[name="payment_mode"]:checked');
+        let paymentModeVal = payModeElem ? payModeElem.value : "Cash";
+        
+        let itemsArray = Object.keys(window.cart).map(key => window.cart[key]);
+
+        if (itemsArray.length === 0 || nameVal === "") {
+            Swal.fire({ icon: 'warning', title: 'Details Missing!', text: 'Please enter your name and select food items.' });
+            return;
+        }
+
+        if (selectedOrderType === 'Offline' && tableVal === "") {
+            Swal.fire({ icon: 'warning', title: 'Table Number Required!', text: 'Please enter your table number.' });
+            return;
+        }
+
+        if (selectedOrderType === 'Online' && (phoneVal === "" || area === "")) {
+            Swal.fire({ icon: 'warning', title: 'Delivery Info Required!', text: 'Please enter your mobile number and Road/Area name.' });
+            return;
+        }
+
+        fetch('/place-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: nameVal, table: tableVal, phone: phoneVal, address: fullAddressVal,
+                cart: itemsArray, total: globalTotal, notes: notesVal,
+                payment_mode: paymentModeVal, order_type: selectedOrderType,
+                delivery_fee: userDeliveryCharge
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === "success") {
+                Swal.fire({
+                    icon: 'success',
+                    title: '🎉 Order Placed Successfully!',
+                    html: `<b>Order ID:</b> #${data.order_id}<br><b>Total Amount:</b> ₹${globalTotal}`
+                });
+                window.cart = {};
+                userDeliveryCharge = 0;
+                userDistanceKM = 0;
+                updateCartUI();
+            }
+        });
+    }
+
+    function openAdminLogin() {
+        Swal.fire({
+            title: '🔒 Admin Login',
+            html:
+                '<input id="swal-user" class="swal2-input" placeholder="Username">' +
+                '<input id="swal-pass" type="password" class="swal2-input" placeholder="Password">',
+            showCancelButton: true,
+            confirmButtonText: 'Login 🚀',
+            preConfirm: () => {
+                const u = document.getElementById('swal-user').value;
+                const p = document.getElementById('swal-pass').value;
+                if (!u || !p) Swal.showValidationMessage('Enter both username and password');
+                return [u, p];
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('/admin-login-check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user: result.value[0], pass: result.value[1] })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === "success") { window.location.href = data.redirect; } 
+                    else { Swal.fire({ icon: 'error', title: 'Login Failed!', text: 'Invalid username or password' }); }
+                });
+            }
+        });
+    }
+
+    let currentGlobalRating = 0;
+    function setGlobalRating(rating) {
+        currentGlobalRating = rating;
+        let stars = document.querySelectorAll('#global-stars .star');
+        stars.forEach((star, index) => {
+            if (index < rating) { star.classList.add('selected'); } 
+            else { star.classList.remove('selected'); }
+        });
+    }
+
+    function submitGeneralReview() {
+        let nameVal = document.getElementById('cust-name').value.trim() || "Guest";
+        let comment = document.getElementById('global-comment').value;
+
+        fetch('/submit-review', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: nameVal, rating: currentGlobalRating, message: comment })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === "success") {
+                Swal.fire({ icon: 'success', title: 'Thank You! ❤️', text: 'Your feedback has been submitted.' });
+                document.getElementById('global-comment').value = "";
+                setGlobalRating(0); 
+            }
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        changeLanguage('en');
+    });
+</script>
+
+</body>
+</html>

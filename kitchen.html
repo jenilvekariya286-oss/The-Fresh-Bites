@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitchen Display System (KDS)</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #1e1e2e; color: #ffffff; padding: 20px; text-align: center; overflow-x: hidden; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; background: #2b2b3d; padding: 15px 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .header h1 { color: #ff4757; font-size: 2rem; }
+        .btn-fullscreen { background: #ffa502; color: #000; font-weight: bold; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; }
+
+        .orders-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .order-card { background: #2b2b3d; border-radius: 15px; padding: 20px; border-left: 8px solid #ff4757; text-align: left; box-shadow: 0 8px 20px rgba(0,0,0,0.4); position: relative; animation: popIn 0.3s ease-in-out; }
+        .order-card.edited { border-left-color: #eccc68; }
+        
+        .card-header { display: flex; justify-content: space-between; border-bottom: 2px solid #3f3f5a; padding-bottom: 10px; margin-bottom: 12px; }
+        .table-badge { background: #ff4757; color: white; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 1.2rem; }
+        .order-id { font-size: 1.1rem; color: #a4b0be; font-weight: bold; }
+        
+        .item-list { margin: 15px 0; font-size: 1.1rem; line-height: 1.6; }
+        .item-row { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px dashed #3f3f5a; padding-bottom: 3px; }
+        
+        .notes-box { background: #3a3b5c; color: #ffeb3b; padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; margin-top: 10px; font-weight: bold; }
+        .complete-btn { width: 100%; background: #2ed573; color: white; border: none; padding: 12px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; margin-top: 15px; cursor: pointer; }
+
+        /* 🚨 FULL-SCREEN POPUP OVERLAY */
+        #alert-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.95); z-index: 99999; justify-content: center; align-items: center; flex-direction: column; text-align: center; padding: 20px; }
+        #alert-box { background: #ff4757; color: white; padding: 40px; border-radius: 20px; width: 90%; max-width: 600px; box-shadow: 0 0 50px rgba(255, 71, 87, 0.8); animation: pulse 0.8s infinite alternate; }
+        #alert-box.cancel-bg { background: #2f3542; border: 4px solid #ff4757; }
+        #alert-title { font-size: 2.8rem; margin-bottom: 15px; text-transform: uppercase; }
+        #alert-msg { font-size: 1.8rem; line-height: 1.5; margin-bottom: 25px; }
+        .ack-btn { background: #ffffff; color: #000000; font-size: 1.8rem; font-weight: bold; padding: 15px 40px; border: none; border-radius: 12px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+
+        @keyframes pulse { from { transform: scale(0.98); } to { transform: scale(1.02); } }
+        @keyframes popIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>👨‍🍳 Kitchen Display System (KDS)</h1>
+        <button class="btn-fullscreen" onclick="enableKDS()">🖥️ Go Fullscreen & Enable Audio</button>
+    </div>
+
+    <div id="orders-container" class="orders-grid">
+        <p style="color: #a4b0be; font-size: 1.2rem;">રાહ જોઈ રહ્યા છીએ... નવો ઓર્ડર આવશે એટલે અહીં દેખાશે!</p>
+    </div>
+
+    <!-- 🚨 FULL SCREEN POPUP OVERLAY -->
+    <div id="alert-overlay">
+        <div id="alert-box">
+            <h1 id="alert-title">🚨 NEW ORDER!</h1>
+            <div id="alert-msg">Table No: 5</div>
+            <button class="ack-btn" onclick="dismissAlert()">✅ GOT IT / DONE</button>
+        </div>
+    </div>
+
+    <!-- Audio Element for Alarm -->
+    <audio id="siren-sound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" loop preload="auto"></audio>
+
+    <script>
+        let lastOrderCount = 0;
+        let audio = document.getElementById('siren-sound');
+        let isAudioAllowed = false;
+
+        function enableKDS() {
+            // Enable Fullscreen
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            }
+            // Unlock audio playback
+            audio.play().then(() => {
+                audio.pause();
+                audio.currentTime = 0;
+                isAudioAllowed = true;
+                alert("KDS Ready & Audio Unlocked!");
+            }).catch(e => console.log(e));
+        }
+
+        function triggerFullScreenAlert(title, msg, isCancel = false) {
+            let overlay = document.getElementById('alert-overlay');
+            let box = document.getElementById('alert-box');
+            let titleEl = document.getElementById('alert-title');
+            let msgEl = document.getElementById('alert-msg');
+
+            titleEl.innerText = title;
+            msgEl.innerHTML = msg;
+
+            if (isCancel) {
+                box.className = "cancel-bg";
+            } else {
+                box.className = "";
+            }
+
+            overlay.style.display = "flex";
+
+            if (isAudioAllowed) {
+                audio.currentTime = 0;
+                audio.play();
+            }
+        }
+
+        function dismissAlert() {
+            document.getElementById('alert-overlay').style.display = "none";
+            audio.pause();
+            audio.currentTime = 0;
+        }
+
+        function fetchKitchenOrders() {
+            fetch('/admin-check-updates')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        renderOrders(data.orders);
+                    }
+                });
+        }
+
+        function renderOrders(orders) {
+            let container = document.getElementById('orders-container');
+            let pendingOrders = orders.filter(o => o.status === 'Pending' || o.status === 'Edited');
+
+            if (pendingOrders.length > lastOrderCount && lastOrderCount !== 0) {
+                let latest = pendingOrders[0];
+                triggerFullScreenAlert("🚨 NEW KITCHEN ORDER!", `<b>📍 Table: ${latest.table_no}</b><br>👤 Name: ${latest.customer_name}<br>🆔 Order: #${latest.id}`);
+            }
+
+            lastOrderCount = pendingOrders.length;
+
+            if (pendingOrders.length === 0) {
+                container.innerHTML = '<p style="color: #a4b0be; font-size: 1.2rem; grid-column: 1/-1;">હાલમાં કોઈ પેન્ડિંગ ઓર્ડર નથી 👍</p>';
+                return;
+            }
+
+            container.innerHTML = "";
+            pendingOrders.forEach(o => {
+                let itemsList = "";
+                if (Array.isArray(o.items)) {
+                    o.items.forEach(i => {
+                        itemsList += `<div class="item-row"><span>${i.name} (${i.spicy || ''})</span> <b>x${i.qty}</b></div>`;
+                    });
+                }
+
+                container.innerHTML += `
+                    <div class="order-card ${o.status === 'Edited' ? 'edited' : ''}">
+                        <div class="card-header">
+                            <span class="order-id">#${o.id}</span>
+                            <span class="table-badge">Table ${o.table_no}</span>
+                        </div>
+                        <h3>👤 ${o.customer_name}</h3>
+                        <div class="item-list">${itemsList}</div>
+                        ${o.notes ? `<div class="notes-box">✍️ Note: ${o.notes}</div>` : ''}
+                        <button class="complete-btn" onclick="markComplete(${o.id})">✅ Mark Ready / Done</button>
+                    </div>
+                `;
+            });
+        }
+
+        function markComplete(orderId) {
+            fetch(`/complete-order/${orderId}`)
+                .then(() => fetchKitchenOrders());
+        }
+
+        // Live Auto Check every 3 Seconds
+        setInterval(fetchKitchenOrders, 3000);
+        fetchKitchenOrders();
+    </script>
+</body>
+</html>

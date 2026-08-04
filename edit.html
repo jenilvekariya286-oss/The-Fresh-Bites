@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Order #{{ order_id }} - Admin</title>
+   <link rel="stylesheet" href="{{ url_for('static', filename='.css/style.css') }}">
+    <style>
+        .locked-input {
+            background-color: #e9ecef !important;
+            cursor: not-allowed;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" style="max-width: 550px; margin-top: 40px;">
+    <div class="panel details-panel">
+        <h3>✏️ Edit Order #{{ order_id }} (Admin)</h3>
+        <p class="panel-subtitle">Modify items, quantities & total amount. Customer info is locked.</p>
+
+        <form method="POST" id="admin-edit-form">
+            <div class="form-group">
+                <label>Customer Name (Locked):</label>
+                <input type="text" class="input-style locked-input" value="{{ order.customer_name }}" disabled>
+            </div>
+            
+            <div class="form-group">
+                <label>Table Number (Locked):</label>
+                <input type="text" class="input-style locked-input" value="{{ order.table_no }}" disabled>
+            </div>
+
+            <hr style="border:0; border-top: 1px dashed #e4e7eb; margin: 20px 0;">
+
+            <h4>📦 Items Ordered:</h4>
+            <div id="admin-items-list"></div>
+
+            <div class="form-group" style="margin-top: 15px;">
+                <label>Add New Menu Item:</label>
+                <select id="menu-select" class="input-style">
+                    <option value="">-- Select Item --</option>
+                    {% for m in menu_items %}
+                    <option value="{{ m.id }}" data-name="{{ m.name_en }}" data-price="{{ m.price }}">{{ m.name_en }} (₹{{ m.price }})</option>
+                    {% endfor %}
+                </select>
+                <button type="button" class="btn btn-blue" style="margin-top: 10px; width: 100%;" onclick="addItemFromMenu()">➕ Add Item</button>
+            </div>
+
+            <hr style="border:0; border-top: 1px dashed #e4e7eb; margin: 20px 0;">
+
+            <div class="form-group">
+                <label>Total Amount (₹):</label>
+                <input type="number" id="admin-total" name="total" class="input-style" value="{{ order.total }}" required>
+            </div>
+
+            <input type="hidden" name="items_json" id="items_json">
+
+            <button type="submit" class="submit-btn" style="background: #1e90ff; margin-top: 10px;" onclick="prepareSubmit()">💾 Save Changes / સેવ કરો</button>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-red" style="display: block; text-align: center; text-decoration: none; margin-top: 10px;">Cancel & Return</a>
+        </form>
+    </div>
+</div>
+
+<!-- Jinja2 દ્વારા ઓર્ડરનો ડેટા સુરક્ષિત રીતે JavaScript ને આપવા માટે -->
+<script id="order-data" type="application/json">
+    {{ order.items | tojson | safe }}
+</script>
+
+<script>
+    let adminCart = [];
+
+    try {
+        const rawData = document.getElementById('order-data').textContent;
+        adminCart = JSON.parse(rawData) || [];
+    } catch (e) {
+        adminCart = [];
+    }
+
+    function renderAdminCart() {
+        const container = document.getElementById('admin-items-list');
+        container.innerHTML = "";
+        let calcTotal = 0;
+
+        if (!Array.isArray(adminCart) || adminCart.length === 0) {
+            container.innerHTML = "<p style='color: #747d8c; font-style: italic;'>No items in order.</p>";
+        } else {
+            adminCart.forEach((item, index) => {
+                let name = item.name || item;
+                let qty = item.qty || 1;
+                let price = item.price || 0;
+                let itemTotal = price * qty;
+                calcTotal += itemTotal;
+
+                container.innerHTML += `
+                    <div class="cart-item" style="padding: 8px 0;">
+                        <span><strong>${name}</strong> (₹${price})</span>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <button type="button" class="qty-btn" onclick="updateQty(${index}, -1)">-</button>
+                            <span style="font-weight: bold;">${qty}</span>
+                            <button type="button" class="qty-btn" onclick="updateQty(${index}, 1)">+</button>
+                            <button type="button" class="remove-btn" onclick="removeItem(${index})">×</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        document.getElementById('admin-total').value = calcTotal;
+    }
+
+    function updateQty(index, change) {
+        if (adminCart[index]) {
+            adminCart[index].qty = (adminCart[index].qty || 1) + change;
+            if (adminCart[index].qty <= 0) {
+                adminCart.splice(index, 1);
+            }
+        }
+        renderAdminCart();
+    }
+
+    function removeItem(index) {
+        adminCart.splice(index, 1);
+        renderAdminCart();
+    }
+
+    function addItemFromMenu() {
+        const select = document.getElementById('menu-select');
+        const selectedOpt = select.options[select.selectedIndex];
+        if (!selectedOpt.value) return;
+
+        const name = selectedOpt.getAttribute('data-name');
+        const price = parseInt(selectedOpt.getAttribute('data-price'));
+
+        let existing = adminCart.find(i => i.name === name);
+        if (existing) {
+            existing.qty += 1;
+        } else {
+            adminCart.push({ name: name, price: price, qty: 1 });
+        }
+
+        select.value = "";
+        renderAdminCart();
+    }
+
+    function prepareSubmit() {
+        document.getElementById('items_json').value = JSON.stringify(adminCart);
+    }
+
+    window.onload = renderAdminCart;
+</script>
+
+</body>
+</html>
