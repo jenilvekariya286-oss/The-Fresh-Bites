@@ -573,7 +573,7 @@
         updateCartUI();
     }
 
-    function openItemModal(id, nameEn, nameGu, price) {
+function openItemModal(id, nameEn, nameGu, price) {
         currentModalItem = { id, nameEn, price: parseFloat(price) };
         document.getElementById('m-title').innerText = `${nameEn} (${nameGu})`;
         document.getElementById('m-price').innerText = `₹ ${price}`;
@@ -581,8 +581,13 @@
 
         let imgSrc = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=80";
         let lower = nameEn.toLowerCase();
-        if (lower.includes("burger")) imgSrc = "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=500&auto=format&fit=crop&q=80";
-        if (lower.includes("sandwich")) imgSrc = "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=500&auto=format&fit=crop&q=80";
+        if (lower.includes("burger")) {
+            imgSrc = "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=500&auto=format&fit=crop&q=80";
+        } else if (lower.includes("sandwich")) {
+            imgSrc = "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=500&auto=format&fit=crop&q=80";
+        } else if (lower.includes("coco") || lower.includes("drink")) {
+            imgSrc = "https://images.unsplash.com/photo-1541658016709-82535e94bc69?w=500&auto=format&fit=crop&q=80";
+        }
 
         document.getElementById('m-img').src = imgSrc;
         document.getElementById('itemModalOverlay').style.display = 'flex';
