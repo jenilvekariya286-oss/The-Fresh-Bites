@@ -30,6 +30,7 @@ def init_db():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute('''
+    cursor.execute('PRAGMA journal_mode=WAL;')
         CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp TEXT,
