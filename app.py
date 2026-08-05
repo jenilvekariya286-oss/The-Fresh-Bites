@@ -5,7 +5,8 @@ import sqlite3
 import json
 from datetime import datetime
 
-app = Flask(__name__)
+import os
+app = Flask(__name__, template_folder=os.path.abspath('.'))
 app.secret_key = "jenil_secret_key_2026"
 
 # ===========================
