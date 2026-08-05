@@ -33,9 +33,12 @@
         .input-style { width: 100%; padding: 12px; border: 2px solid #eef2f5; background: #f8f9fa; border-radius: 10px; outline: none; font-size: 0.95rem; transition: 0.3s; }
         .input-style:focus { border-color: var(--primary); background: #fff; }
 
-        .location-btn-group { display: flex; gap: 10px; margin-top: 15px; }
+        .location-btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
         .gps-btn { width: 100%; background: #1e90ff; color: white; border: none; padding: 12px; border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(30,144,255,0.25); transition: 0.2s; }
         .gps-btn:active { transform: scale(0.98); }
+        
+        .done-btn { width: 100%; background: var(--accent-green); color: white; border: none; padding: 12px; border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(46,213,115,0.25); transition: 0.2s; }
+        .done-btn:active { transform: scale(0.98); }
 
         .food-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px; }
         .zomato-card { background: white; border-radius: 18px; overflow: hidden; box-shadow: 0 6px 18px rgba(0,0,0,0.06); cursor: pointer; transition: transform 0.3s ease; position: relative; }
@@ -79,8 +82,8 @@
     <div class="lang-container">
         <select id="langSelect" class="lang-select" onchange="changeLanguage(this.value)">
             <option value="en" selected>🌐 English</option>
-            <option value="gu">🌐 ગુજરાતી </option>
-            <option value="hi">🌐 हिंदी </option>
+            <option value="gu">🌐 Gujarati</option>
+            <option value="hi">🌐 Hindi</option>
         </select>
     </div>
 
@@ -106,8 +109,13 @@
             </div>
 
             <div class="form-group" id="offline-field">
-                <label for="table-num" id="t-label-table">Table Number</label>
-                <input type="number" id="table-num" class="input-style" placeholder="Table No" min="1">
+                <label for="table-num" id="t-label-table">Table Number (1 to 10)</label>
+                <select id="table-num" class="input-style">
+                    <option value="">Select Table</option>
+                    {% for t in available_tables %}
+                        <option value="{{ t }}">Table {{ t }}</option>
+                    {% endfor %}
+                </select>
             </div>
 
             <div class="form-group" id="online-phone-field" style="display: none;">
@@ -146,9 +154,13 @@
                 <input type="text" id="addr-landmark" class="input-style" placeholder="Nearby Famous Place / Landmark">
             </div>
 
+            <!-- Live Location & Done Button Group -->
             <div class="location-btn-group">
                 <button type="button" class="gps-btn" id="gps-btn-id" onclick="detectLiveGPSLocation()">
                     🎯 Use Live Location
+                </button>
+                <button type="button" class="done-btn" id="done-btn-id" onclick="confirmAddressDone()">
+                    ✅ Done (Confirm Address)
                 </button>
             </div>
         </div>
@@ -289,7 +301,6 @@
     let selectedOrderType = 'Offline';
     let currentModalItem = {};
 
-    // 📍 SHOP LOCATION: Bhole Pan & Cold drinks, Kankot, Rajkot
     const RESTAURANT_LAT = 22.2471;
     const RESTAURANT_LNG = 70.7601;
 
@@ -306,9 +317,8 @@
             custHeader: "👤 1. Enter Delivery Address",
             custSub: "Please enter your details below to start ordering",
             labelName: "Name",
-            labelTable: "Table Number",
+            labelTable: "Table Number (1 to 10)",
             labelPhone: "Contact Number",
-            labelAddress: "Delivery Address Details",
             menuHeader: "📋 2. Our Special Menu",
             addBtn: "Customise & Add ➔",
             cartHeader: "🛒 Your Order Cart",
@@ -325,10 +335,7 @@
             revSub: "Give us your valuable feedback about our food and service!",
             revRating: "Give Rating:",
             revComment: "Your Message:",
-            btnRevSubmit: "Submit Review",
-            modalSpicy: "🌶️ Customise taste:",
-            modalQty: "🔢 Quantity:",
-            modalAdd: "Add Item To Cart 🛒"
+            btnRevSubmit: "Submit Review"
         },
         gu: {
             subtitle: "તાજી અને સ્વાદિષ્ટ વાનગીઓ સીધી તમારા ટેબલ પર!",
@@ -338,9 +345,8 @@
             custHeader: "👤 1. ડિલિવરી સરનામું લખો",
             custSub: "ઓર્ડર શરૂ કરવા માટે તમારી માહિતી ભરો",
             labelName: "નામ",
-            labelTable: "ટેબલ નંબર",
+            labelTable: "ટેબલ નંબર (૧ થી ૧૦)",
             labelPhone: "મોબાઈલ નંબર",
-            labelAddress: "ડિલિવરી સરનામું",
             menuHeader: "📋 2. અમારું ખાસ મેનૂ",
             addBtn: "પસંદ કરો અને ઉમેરો ➔",
             cartHeader: "🛒 તમારી ઓર્ડર ટોપલી",
@@ -357,20 +363,15 @@
             revSub: "અમારી વાનગી અને સર્વિસ વિશે રિવ્યુ આપો!",
             revRating: "રેટિંગ આપો:",
             revComment: "તમારો સંદેશ:",
-            btnRevSubmit: "રિવ્યુ મોકલો",
-            modalSpicy: "🌶️ સ્વાદ પસંદ કરો:",
-            modalQty: "🔢 જથ્થો:",
-            modalAdd: "ટોપલીમાં ઉમેરો 🛒"
+            btnRevSubmit: "રિવ્યુ મોકલો"
         }
     };
 
-    // 💰 REASONABLE LOW DELIVERY FEE SLABS
     function calculateSlabFee(km) {
         if (km <= 0) return 0;
-        if (km <= 3.0) return 10;  // Up to 3 KM: ₹10
-        if (km <= 6.0) return 20;  // Up to 6 KM: ₹20
-        if (km <= 10.0) return 30; // Up to 10 KM: ₹30
-        // Above 10 KM: ₹30 + ₹5 per extra KM
+        if (km <= 3.0) return 10;
+        if (km <= 6.0) return 20;
+        if (km <= 10.0) return 30;
         return 30 + Math.ceil(km - 10.0) * 5;
     }
 
@@ -434,7 +435,6 @@
             });
     }
 
-    // 🎯 LIVE GPS LOCATION WITH FULL AUTO-FILL
     function detectLiveGPSLocation() {
         let gpsBtn = document.getElementById('gps-btn-id');
         gpsBtn.innerText = "⏳ Detecting Location...";
@@ -494,6 +494,25 @@
             },
             { enableHighAccuracy: true, timeout: 10000 }
         );
+    }
+
+    // Done બટન માટેનું ફંકશન
+    function confirmAddressDone() {
+        let area = document.getElementById('addr-area').value.trim();
+        if (!area) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Address Required!',
+                text: 'Please enter your Road/Area name or use Live Location.'
+            });
+            return;
+        }
+
+        Swal.fire({
+            icon: 'success',
+            title: '✅ Address Confirmed!',
+            text: `Delivery Fee calculated: ₹${userDeliveryCharge}`
+        });
     }
 
     function changeLanguage(lang) {
@@ -673,7 +692,7 @@
         }
 
         if (selectedOrderType === 'Offline' && tableVal === "") {
-            Swal.fire({ icon: 'warning', title: 'Table Number Required!', text: 'Please enter your table number.' });
+            Swal.fire({ icon: 'warning', title: 'Table Number Required!', text: 'Please select a table number (1 to 10).' });
             return;
         }
 
