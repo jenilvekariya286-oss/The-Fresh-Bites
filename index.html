@@ -110,12 +110,19 @@
 
             <div class="form-group" id="offline-field">
                 <label for="table-num" id="t-label-table">Table Number (1 to 10)</label>
-                <select id="table-num" class="input-style">
-                    <option value="">Select Table</option>
-                    {% for t in available_tables %}
-                        <option value="{{ t }}">Table {{ t }}</option>
-                    {% endfor %}
-                </select>
+<select id="table-num" class="input-style">
+    <option value="">Select Table</option>
+    <option value="1">Table 1</option>
+    <option value="2">Table 2</option>
+    <option value="3">Table 3</option>
+    <option value="4">Table 4</option>
+    <option value="5">Table 5</option>
+    <option value="6">Table 6</option>
+    <option value="7">Table 7</option>
+    <option value="8">Table 8</option>
+    <option value="9">Table 9</option>
+    <option value="10">Table 10</option>
+</select>
             </div>
 
             <div class="form-group" id="online-phone-field" style="display: none;">
