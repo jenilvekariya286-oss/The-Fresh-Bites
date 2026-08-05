@@ -5,7 +5,7 @@ import sqlite3
 import json
 from datetime import datetime
 
-app = Flask(__name__, template_folder='.')
+app = Flask(__name__)
 app.secret_key = "jenil_secret_key_2026"
 
 # ===========================
@@ -108,7 +108,9 @@ def get_all_reviews():
 
 @app.route("/")
 def home():
-    return render_template("index.html", items=MENU_ITEMS, restaurant_name=YOUR_NAME)
+    # ૧ થી ૧૦ ટેબલની ડ્રોપડાઉન લિસ્ટ HTML માં મોકલવા માટે
+    available_tables = list(range(1, 11))
+    return render_template("index.html", items=MENU_ITEMS, restaurant_name=YOUR_NAME, available_tables=available_tables)
 
 @app.route("/admin-login-check", methods=["POST"])
 def admin_login_check():
@@ -138,7 +140,7 @@ def place_order():
     try:
         data = request.get_json(silent=True) or {}
         customer_name = data.get("name", "Unknown")
-        table_no = data.get("table", "N/A")
+        table_no = str(data.get("table", "N/A"))
         cart = data.get("cart", [])
         notes = data.get("notes", "")
         payment_mode = data.get("payment_mode", "Cash")
@@ -147,6 +149,13 @@ def place_order():
         address = data.get("address", "")
         delivery_fee = int(data.get("delivery_fee", 0))
         
+        # ૧ થી ૧૦ ટેબલ ચકાસણી (Dine-in / Offline ઓર્ડર માટે)
+        if order_type.lower() == "offline" or table_no.isdigit():
+            if table_no.isdigit():
+                t_num = int(table_no)
+                if t_num < 1 or t_num > 10:
+                    return jsonify({"status": "error", "message": "માત્ર ૧ થી ૧૦ નંબરના જ ટેબલ ઉપલબ્ધ છે!"}), 400
+
         try:
             total = int(float(data.get("total", 0)))
         except:
