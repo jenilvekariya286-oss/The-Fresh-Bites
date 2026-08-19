@@ -3,410 +3,523 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kitchen Order Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='.css/style.css') }}">
+    <title>Executive Kitchen & Sales Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
-        .mode-switcher-container {
-            background: #ffffff;
-            padding: 15px 20px;
+        :root {
+            --bg-base: #0b0f19;
+            --surface: #111827;
+            --surface-card: #1f2937;
+            --surface-hover: #374151;
+            --border: #374151;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --accent-primary: #3b82f6;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --accent-purple: #8b5cf6;
+        }
+
+        body.light-mode {
+            --bg-base: #f3f4f6;
+            --surface: #ffffff;
+            --surface-card: #ffffff;
+            --surface-hover: #f9fafb;
+            --border: #e5e7eb;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --accent-primary: #2563eb;
+            --accent-success: #059669;
+            --accent-warning: #d97706;
+            --accent-danger: #dc2626;
+            --accent-purple: #7c3aed;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: var(--bg-base); color: var(--text-main); padding: 24px; transition: 0.2s ease; }
+        .dashboard-container { max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+
+        .top-navbar {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 16px 24px;
             border-radius: 16px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-            margin-bottom: 20px;
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            gap: 15px;
+            align-items: center;
             flex-wrap: wrap;
-            border: 2px solid #eef2f5;
+            gap: 16px;
         }
+        .brand-section h1 { font-size: 1.4rem; font-weight: 800; }
+        .brand-section p { font-size: 0.85rem; color: var(--text-muted); margin-top: 2px; }
+        .nav-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 
-        .mode-btn-group {
-            display: flex;
-            gap: 10px;
-            background: #f1f2f6;
-            padding: 6px;
-            border-radius: 12px;
-            flex-wrap: wrap;
-        }
-
-        .mode-btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 0.95rem;
-            cursor: pointer;
-            background: transparent;
-            color: #57606f;
-            transition: 0.3s;
-        }
-
-        .mode-btn.active {
-            background: #ff4757;
-            color: #ffffff;
-            box-shadow: 0 4px 12px rgba(255, 71, 87, 0.3);
-        }
-
-        .date-picker-container {
-            display: flex;
+        .toggle-container {
+            display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: #f1f2f6;
-            padding: 8px 14px;
+            background: var(--surface-card);
+            padding: 6px 14px;
             border-radius: 12px;
-            flex-wrap: wrap;
+            border: 1px solid var(--border);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
         }
+        .switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #4b5563; transition: .3s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--accent-success); }
+        input:checked + .slider:before { transform: translateX(18px); }
 
-        .date-input {
-            padding: 8px 12px;
-            border: 1px solid #ced6e0;
+        .btn-pill {
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: var(--surface-card);
+            color: var(--text-main);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+        .btn-pill:hover { background: var(--surface-hover); }
+        .btn-pill.success { background: var(--accent-success); color: white; border: none; }
+        .btn-pill.danger { background: var(--accent-danger); color: white; border: none; }
+
+        .control-bar {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 16px 20px;
+            border-radius: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .segmented-control {
+            display: inline-flex;
+            background: var(--surface-card);
+            padding: 4px;
+            border-radius: 12px;
+            gap: 4px;
+            border: 1px solid var(--border);
+        }
+        .segment-btn {
+            padding: 8px 16px;
+            border: none;
             border-radius: 8px;
-            font-weight: bold;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            background: transparent;
+            color: var(--text-muted);
+            transition: 0.2s;
+        }
+        .segment-btn.active { background: var(--accent-primary); color: white; }
+        .date-picker-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .input-date-styled {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface-card);
+            color: var(--text-main);
+            font-weight: 600;
             outline: none;
         }
 
-        .tab-btn-container { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .tab-btn {
-            padding: 10px 18px;
-            border: none;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
-            background: #e4e7eb;
-            color: #2f3542;
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
         }
-        .tab-btn.active { background: #1e90ff; color: white; }
-        .history-section { display: none; }
-        .history-section.active { display: block; }
-        
-        .btn-excel {
-            background: #2ed573;
-            color: white;
-            padding: 10px 18px;
+        .kpi-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; }
+        .kpi-card.blue::before { background: var(--accent-primary); }
+        .kpi-card.green::before { background: var(--accent-success); }
+        .kpi-card.amber::before { background: var(--accent-warning); }
+        .kpi-card.purple::before { background: var(--accent-purple); }
+
+        .kpi-title { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-value { font-size: 1.8rem; font-weight: 800; margin-top: 8px; color: var(--text-main); }
+
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 2.8fr 1.2fr;
+            gap: 24px;
+            align-items: start;
+        }
+        @media(max-width: 1024px) { .workspace-grid { grid-template-columns: 1fr; } }
+
+        .table-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            overflow: hidden;
+        }
+        .tabs-header {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .tab-item {
+            padding: 8px 16px;
             border-radius: 8px;
-            text-decoration: none;
-            font-weight: bold;
-            display: inline-block;
-            border: none;
+            font-size: 0.85rem;
+            font-weight: 700;
             cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            transition: 0.2s;
         }
+        .tab-item.active { background: var(--surface-card); color: var(--text-main); border: 1px solid var(--border); }
 
-        .badge { padding: 5px 10px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; }
-        .badge-pending { background: #ffeaa7; color: #d63031; border: 1px solid #fdcb6e; }
-        .badge-completed { background: #55efc4; color: #00b894; }
-        .badge-cancelled { background: #ff7675; color: white; }
-
-        .pay-badge { font-weight: bold; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; display: inline-block; margin-top: 4px; }
-        .pay-cash { background: #eccc68; color: #2f3542; }
-        .pay-online { background: #70a1ff; color: white; }
-        
-        .type-badge { font-weight: bold; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; display: inline-block; color: white; }
-        .type-offline { background: #2ed573; }
-        .type-online { background: #1e90ff; }
-
-        .btn-complete { background: #2ed573; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block; }
-        .btn-cancel { background: #ff4757; color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-weight: bold; display: inline-block; margin-left: 5px; }
-
-        @keyframes flashBackground {
-            0% { background-color: #ff4757; }
-            50% { background-color: #ffa502; }
-            100% { background-color: #ff4757; }
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .data-table th {
+            padding: 12px 16px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface-card);
         }
+        .data-table td { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        .data-table tr:hover td { background: var(--surface-card); }
 
-        .flashing-screen { animation: flashBackground 0.5s infinite !important; }
+        .tag { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 800; display: inline-flex; align-items: center; gap: 4px; }
+        .tag-online { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .tag-dinein { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .tag-cash { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+        .tag-upi { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
+        .tag-pending { background: #fef3c7; color: #b45309; }
+        .tag-completed { background: #d1fae5; color: #047857; }
+        .tag-cancelled { background: #fee2e2; color: #b91c1c; }
+
+        .btn-action { padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; border: none; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-action.edit { background: var(--accent-warning); color: white; margin-right: 4px; }
+        .btn-action.done { background: var(--accent-success); color: white; margin-right: 4px; }
+        .btn-action.cancel { background: var(--accent-danger); color: white; }
+
+        .side-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+        }
+        .side-panel h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 16px; }
+        .breakdown-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            background: var(--surface-card);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border: 1px solid var(--border);
+        }
 
         .kitchen-alert-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(255, 71, 87, 0.98); z-index: 999999;
+            background: rgba(0, 0, 0, 0.85); z-index: 999999;
             justify-content: center; align-items: center; text-align: center; flex-direction: column;
+            backdrop-filter: blur(5px);
         }
-
         .kitchen-alert-box {
-            background: #ffffff; padding: 35px 25px; border-radius: 20px;
-            max-width: 90%; width: 380px; box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            background: #ffffff; padding: 40px 30px; border-radius: 24px;
+            max-width: 90%; width: 420px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); color: #111827;
         }
-
-        .btn-stop-alert {
-            background: #2ed573; color: white; border: none; padding: 15px 30px;
-            border-radius: 12px; font-weight: bold; font-size: 1.3rem; cursor: pointer; margin-top: 15px; width: 100%;
-        }
-
-        .device-badge { background: #f1f2f6; padding: 8px 12px; border-radius: 8px; font-size: 0.9rem; margin-top: 8px; display: inline-block; }
     </style>
 </head>
-<body id="mainBody">
+<body>
 
 <div id="kitchenAlertModal" class="kitchen-alert-overlay">
-    <div class="kitchen-alert-box">
-        <h2 style="color: #ff4757; font-size: 2.2rem; margin-bottom: 10px;">🚨 NEW ORDER!</h2>
-        <div id="kitchenOrderInfo" style="font-size: 1.3rem; color: #2f3542; margin: 15px 0; font-weight: bold;"></div>
-        <button class="btn-stop-alert" onclick="stopKitchenAlert()">OK / Accept Order 🔔</button>
+    <div class="kitchen-alert-box" id="kitchenAlertBox">
+        <h2 id="kitchenAlertTitle" style="color: #ef4444; font-size: 1.8rem; font-weight: 800; margin-bottom: 10px;">🚨 NEW ORDER!</h2>
+        <div id="kitchenOrderInfo" style="font-size: 1.05rem; margin: 15px 0; font-weight: 700; line-height: 1.5;"></div>
+        <button class="btn-pill success" style="width: 100%; justify-content: center; padding: 14px; font-size: 1.1rem;" onclick="stopKitchenAlert()">OK / Got it 👍</button>
     </div>
 </div>
 
-<div class="container" style="max-width: 1100px; margin: auto; padding: 20px;">
+<div class="dashboard-container">
     
-    <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
-        <div>
-            <h1>📊 Kitchen Dashboard (માલિક / રસોડા માટે)</h1>
-            <p>Real-time Order Management Panel</p>
-            <div class="device-badge" id="deviceStatusText">💻 Current Mode: Laptop Mode (No Popups)</div>
-        </div>
-        <div style="text-align: right;">
-            <button onclick="openDownloadPopup()" class="btn-excel">📥 Download Statement (CSV)</button>
-            <a href="{{ url_for('admin_logout') }}" style="background: #747d8c; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-left: 10px;">🚪 Logout</a>
-            <div style="margin-top: 10px;">
-                <button onclick="setupKitchenMobile()" style="background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer;">📱 Set Kitchen Mobile Mode</button>
-                <button onclick="clearKitchenDevice()" style="background: #747d8c; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-left: 5px;">💻 Laptop Mode</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ⚙️ MODE SWITCHER & 📅 SINGLE DATE FILTER -->
-    <div class="mode-switcher-container">
-        <div>
-            <span style="font-weight: bold; font-size: 1.05rem; color: #2f3542;">⚙️ Filter Orders:</span>
-            <div class="mode-btn-group" style="display: inline-flex; margin-left: 10px;">
-                <button class="mode-btn active" id="mode-all" onclick="setDashboardMode('ALL', this)">📊 Total (All Orders)</button>
-                <button class="mode-btn" id="mode-offline" onclick="setDashboardMode('Offline', this)">🍽️ Offline Orders</button>
-                <button class="mode-btn" id="mode-online" onclick="setDashboardMode('Online', this)">🛵 Online Orders</button>
-            </div>
+    <header class="top-navbar">
+        <div class="brand-section">
+            <h1>☕ The Fresh Bites <span>• Executive Hub</span></h1>
+            <p id="deviceStatusText">💻 Mode: Silent / Laptop Mode (Alerts Silenced)</p>
         </div>
 
-        <div class="date-picker-container">
-            <span style="font-weight: bold; color: #2f3542;">📅 તારીખ પસંદ કરો:</span>
-            <input type="date" id="filter-date-input" class="date-input">
-            <button onclick="applyDateFilterProcess()" style="background: #2ed573; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: bold; cursor: pointer;">✅ Done</button>
-            <button onclick="resetToTodayDate()" style="background: #1e90ff; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: bold; cursor: pointer;">આજની તારીખ</button>
-        </div>
-    </div>
+        <div class="nav-controls">
+            <label class="toggle-container" title="ઓર્ડર અપડેટ્સ પર ઑડિયો સાંભળવા માટે">
+                <span>🔊 Kitchen Audio:</span>
+                <div class="switch">
+                    <input type="checkbox" id="kitchenToggleSwitch" onchange="toggleKitchenAlertMode(this.checked)">
+                    <span class="slider"></span>
+                </div>
+            </label>
 
-    <!-- 📊 DYNAMIC SALES SUMMARY CARDS -->
-    <div class="summary-boxes" style="display: flex; gap: 15px; margin-top: 10px; flex-wrap: wrap;">
-        <div class="box" style="flex: 1; min-width: 180px; padding: 15px; background: white; border-top: 4px solid #2ed573; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-            <h3>📅 Selected Date Sales</h3>
-            <p style="font-size: 1.5rem; font-weight: bold;">₹ <span id="val-today-sales">0</span></p>
+            <button class="btn-pill" id="theme-btn-id" onclick="toggleDarkMode()">🌙 Theme</button>
+            <button onclick="openDownloadPopup()" class="btn-pill success">📥 Statement (CSV)</button>
+            <a href="{{ url_for('admin_logout') }}" class="btn-pill danger">🚪 Logout</a>
         </div>
-        <div class="box" style="flex: 1; min-width: 180px; padding: 15px; background: white; border-top: 4px solid #ffa502; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-            <h3>💵 Cash Sales</h3>
-            <p style="font-size: 1.5rem; font-weight: bold; color: #eccc68;">₹ <span id="val-cash-sales">0</span></p>
-        </div>
-        <div class="box" style="flex: 1; min-width: 180px; padding: 15px; background: white; border-top: 4px solid #70a1ff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-            <h3>💳 Online UPI Sales</h3>
-            <p style="font-size: 1.5rem; font-weight: bold; color: #70a1ff;">₹ <span id="val-online-sales">0</span></p>
-        </div>
-        <div class="box" style="flex: 1; min-width: 180px; padding: 15px; background: white; border-top: 4px solid #1e90ff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-            <h3>💰 Total Sales</h3>
-            <p style="font-size: 1.5rem; font-weight: bold;">₹ <span id="val-total-sales">0</span></p>
-        </div>
-    </div>
+    </header>
 
-    <!-- 📋 ORDER LISTING TABLE -->
-    <div class="input-row" style="display: flex; gap: 20px; align-items: flex-start; margin-top: 25px; flex-wrap: wrap;">
+    <section class="control-bar">
+        <div class="segmented-control">
+            <button class="segment-btn active" id="mode-all" onclick="setDashboardMode('ALL', this)">📊 All Orders</button>
+            <button class="segment-btn" id="mode-offline" onclick="setDashboardMode('Offline', this)">🍽️ Dine-In</button>
+            <button class="segment-btn" id="mode-online" onclick="setDashboardMode('Online', this)">🛵 Online Parcel</button>
+        </div>
+
+        <div class="date-picker-group">
+            <label style="font-size: 0.85rem; font-weight: 700; color: var(--text-muted);">Filter Date:</label>
+            <input type="date" id="filter-date-input" class="input-date-styled" onkeypress="handleDateEnter(event)">
+            <button onclick="applyDateFilterProcess()" class="btn-pill success">Apply</button>
+            <button onclick="resetToTodayDate()" class="btn-pill">Today</button>
+        </div>
+    </section>
+
+    <section class="kpi-grid">
+        <div class="kpi-card green">
+            <div class="kpi-title">📅 Selected Date Revenue</div>
+            <div class="kpi-value">₹ <span id="val-today-sales">0</span></div>
+        </div>
+        <div class="kpi-card amber">
+            <div class="kpi-title">💵 Cash Collections</div>
+            <div class="kpi-value">₹ <span id="val-cash-sales">0</span></div>
+        </div>
+        <div class="kpi-card purple">
+            <div class="kpi-title">💳 Online UPI Payments</div>
+            <div class="kpi-value">₹ <span id="val-online-sales">0</span></div>
+        </div>
+        <div class="kpi-card blue">
+            <div class="kpi-title">💰 All-Time Total Sales</div>
+            <div class="kpi-value">₹ <span id="val-total-sales">0</span></div>
+        </div>
+    </section>
+
+    <div class="workspace-grid">
         
-        <div style="flex: 2; min-width: 320px;">
-            <h2>📋 Order History / ઓર્ડર હિસ્ટ્રી</h2>
-            
-            <div class="tab-btn-container">
-                <button class="tab-btn active" onclick="switchTab('all-orders', this)">📋 All Orders ({{ orders|length }})</button>
-                <button class="tab-btn" onclick="switchTab('completed-orders', this)">🟢 Completed Orders (<span id="cnt-completed">0</span>)</button>
-                <button class="tab-btn" onclick="switchTab('pending-orders', this)">🟠 Pending Orders (<span id="cnt-pending">0</span>)</button>
-                <button class="tab-btn" onclick="switchTab('cancelled-orders', this)">🔴 Cancelled Orders (<span id="cnt-cancelled">0</span>)</button>
+        <main class="table-panel">
+            <div class="tabs-header">
+                <button class="tab-item active" id="tab-btn-all-orders" onclick="switchTab('all-orders', this)">📋 All Orders (<span id="cnt-all-orders">{{ orders|length }}</span>)</button>
+                <button class="tab-item" id="tab-btn-completed-orders" onclick="switchTab('completed-orders', this)">🟢 Completed (<span id="cnt-completed">0</span>)</button>
+                <button class="tab-item" id="tab-btn-pending-orders" onclick="switchTab('pending-orders', this)">🟠 Pending (<span id="cnt-pending">0</span>)</button>
+                <button class="tab-item" id="tab-btn-cancelled-orders" onclick="switchTab('cancelled-orders', this)">🔴 Cancelled (<span id="cnt-cancelled">0</span>)</button>
             </div>
 
-            <!-- 1. ALL ORDERS (ALWAYS SHOWS ALL ORDERS WITHOUT DATE FILTER) -->
-            <div id="all-orders" class="history-section active">
-                <div class="table-container">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="background: #f1f2f6; text-align: left;">
-                                <th style="padding: 10px;">Type & Customer</th>
-                                <th style="padding: 10px;">Items</th>
-                                <th style="padding: 10px;">Payment</th>
-                                <th style="padding: 10px;">Status</th>
-                                <th style="padding: 10px;">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for order in orders %}
-                            <tr class="all-orders-row" data-type="{{ order.order_type or 'Offline' }}" data-amount="{{ order.total if order.status != 'Cancelled' else 0 }}" data-payment="{{ order.payment_mode or 'Cash' }}" data-status="{{ order.status }}" data-timestamp="{{ order.date or order.timestamp or '' }}" style="border-bottom: 1px solid #ddd;">
-                                <td style="padding: 10px;">
-                                    {% if order.order_type == 'Online' %}
-                                        <span class="type-badge type-online">🛵 Online</span> <strong>👤 {{ order.customer_name }}</strong><br>
-                                        <small>📍 {{ order.address }} | 📞 {{ order.phone }}</small><br>
-                                    {% else %}
-                                        <span class="type-badge type-offline">🍽️ Dine-In</span> <strong>👤 {{ order.customer_name }}</strong> (Table {{ order.table_no }})<br>
-                                    {% endif %}
-                                    <small style="color: #747d8c;">⏰ {{ order.date or order.timestamp }}</small>
-                                </td>
-                                <td style="padding: 10px;">
-                                    {% for item in order['items'] %}
-                                        {{ item.name if item is mapping else item }} (x{{ item.qty if item is mapping else 1 }}){% if not loop.last %}, {% endif %}
-                                    {% endfor %}
-                                </td>
-                                <td style="padding: 10px;">
-                                    {% if order.payment_mode == 'Online' %}<span class="pay-badge pay-online">💳 Online</span>
-                                    {% else %}<span class="pay-badge pay-cash">💵 Cash</span>{% endif %}
-                                </td>
-                                <td style="padding: 10px;">
-                                    {% if order.status == 'Pending' %}<span class="badge badge-pending">🟠 Pending</span>
-                                    {% elif order.status == 'Completed' %}<span class="badge badge-completed">🟢 Completed</span>
-                                    {% else %}<span class="badge badge-cancelled">🔴 Cancelled</span>{% endif %}
-                                </td>
-                                <td style="padding: 10px; font-weight: bold; color: #2ed573;">₹ {{ order.total }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+            <!-- Tab 1: All Orders -->
+            <div id="all-orders" class="history-section">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Channel & Customer</th>
+                            <th>Ordered Items</th>
+                            <th>Payment</th>
+                            <th>Status & Total</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="all-orders-tbody">
+                        {% for order in orders %}
+                        <tr class="all-orders-row" data-type="{{ order.order_type or 'Offline' }}" data-amount="{{ order.total if order.status != 'Cancelled' else 0 }}" data-payment="{{ order.payment_mode or 'Cash' }}" data-status="{{ order.status }}" data-timestamp="{{ order.date or order.timestamp or '' }}">
+                            <td>
+                                {% if order.order_type == 'Online' %}
+                                    <span class="tag tag-online">🛵 Online</span> <b>{{ order.customer_name }}</b><br>
+                                    <small style="color: var(--text-muted);">📍 {{ order.address }} | 📞 {{ order.phone }}</small>
+                                {% else %}
+                                    <span class="tag tag-dinein">🍽️ Table {{ order.table_no }}</span> <b>{{ order.customer_name }}</b>
+                                {% endif %}
+                                <br><small style="color: var(--text-muted); font-size: 0.75rem;">⏰ {{ order.date or order.timestamp }}</small>
+                            </td>
+                            <td>
+                                {% for item in order['items'] %}
+                                    {{ item.name if item is mapping else item }} (x{{ item.qty if item is mapping else 1 }}){% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <span class="tag {{ 'tag-upi' if order.payment_mode == 'Online' else 'tag-cash' }}">{{ order.payment_mode }}</span>
+                            </td>
+                            <td>
+                                <span class="tag tag-{{ order.status|lower }}">{{ order.status }}</span>
+                                <div style="font-weight: 800; margin-top: 4px; color: var(--accent-success);">₹ {{ order.total }}</div>
+                            </td>
+                            <td>
+                                {% if order.status == 'Pending' %}
+                                    <button class="btn-action edit" onclick="openEditOrderModal('{{ order.id }}', '{{ order.customer_name }}', '{{ order.table_no }}', '{{ order.total }}', '{{ order.notes }}')">✏️ Edit</button>
+                                {% else %}
+                                    <span style="color: var(--text-muted); font-size: 0.8rem; font-style: italic;">Locked</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Tab 2: Completed Orders -->
+            <div id="completed-orders" class="history-section" style="display:none;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Customer Info</th>
+                            <th>Items</th>
+                            <th>Payment</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="completed-orders-tbody">
+                        {% for order in orders if order.status == 'Completed' %}
+                        <tr class="date-filtered-row" data-type="{{ order.order_type or 'Offline' }}" data-amount="{{ order.total }}" data-payment="{{ order.payment_mode or 'Cash' }}" data-status="{{ order.status }}" data-timestamp="{{ order.date or order.timestamp or '' }}">
+                            <td>
+                                <b>{{ order.customer_name }}</b> ({% if order.order_type == 'Online' %}Online{% else %}Table {{ order.table_no }}{% endif %})<br>
+                                <small style="color: var(--text-muted);">⏰ {{ order.date or order.timestamp }}</small>
+                            </td>
+                            <td>
+                                {% for item in order['items'] %}
+                                    {{ item.name if item is mapping else item }} (x{{ item.qty if item is mapping else 1 }}), 
+                                {% endfor %}
+                            </td>
+                            <td><span class="tag {{ 'tag-upi' if order.payment_mode == 'Online' else 'tag-cash' }}">{{ order.payment_mode }}</span></td>
+                            <td style="color: var(--accent-success); font-weight: 800;">₹ {{ order.total }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Tab 3: Pending Orders -->
+            <div id="pending-orders" class="history-section" style="display:none;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Channel & Customer</th>
+                            <th>Items Detail</th>
+                            <th>Payment</th>
+                            <th>Total</th>
+                            <th>Operations</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pending-orders-tbody">
+                        {% for order in orders if order.status == 'Pending' %}
+                        <tr class="date-filtered-row" data-type="{{ order.order_type or 'Offline' }}" data-amount="{{ order.total }}" data-payment="{{ order.payment_mode or 'Cash' }}" data-status="{{ order.status }}" data-timestamp="{{ order.date or order.timestamp or '' }}">
+                            <td>
+                                {% if order.order_type == 'Online' %}
+                                    <span class="tag tag-online">🛵 Online</span> <b>{{ order.customer_name }}</b><br>
+                                    <small style="color: var(--text-muted);">📞 {{ order.phone }} | 📍 {{ order.address }}</small>
+                                {% else %}
+                                    <span class="tag tag-dinein">🍽️ Table {{ order.table_no }}</span> <b>{{ order.customer_name }}</b>
+                                {% endif %}
+                                <br><small style="color: var(--text-muted); font-size: 0.75rem;">⏰ {{ order.date or order.timestamp }}</small>
+                                {% if order.notes %}
+                                    <div style="color: var(--accent-danger); font-size: 0.8rem; font-weight: 700; margin-top: 4px;">✍️ Note: {{ order.notes }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% for item in order['items'] %}
+                                    • {{ item.name if item is mapping else item }} (x{{ item.qty if item is mapping else 1 }})<br>
+                                {% endfor %}
+                            </td>
+                            <td><span class="tag {{ 'tag-upi' if order.payment_mode == 'Online' else 'tag-cash' }}">{{ order.payment_mode }}</span></td>
+                            <td style="font-weight: 800; color: var(--accent-success);">₹ {{ order.total }}</td>
+                            <td>
+                                <button class="btn-action edit" onclick="openEditOrderModal('{{ order.id }}', '{{ order.customer_name }}', '{{ order.table_no }}', '{{ order.total }}', '{{ order.notes }}')">Edit</button>
+                                <a href="{{ url_for('complete_order', order_id=order.id) }}" class="btn-action done">Complete</a>
+                                <a href="javascript:void(0)" onclick="cancelOrderDirect({{ order.id }})" class="btn-action cancel">Cancel</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Tab 4: Cancelled Orders -->
+            <div id="cancelled-orders" class="history-section" style="display:none;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th>Payment</th>
+                            <th>Status</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cancelled-orders-tbody">
+                        {% for order in orders if order.status == 'Cancelled' %}
+                        <tr class="date-filtered-row" data-type="{{ order.order_type or 'Offline' }}" data-amount="0" data-payment="{{ order.payment_mode or 'Cash' }}" data-status="{{ order.status }}" data-timestamp="{{ order.date or order.timestamp or '' }}">
+                            <td>
+                                <b>{{ order.customer_name }}</b><br>
+                                <small style="color: var(--text-muted);">⏰ {{ order.date or order.timestamp }}</small>
+                            </td>
+                            <td>{{ order.payment_mode }}</td>
+                            <td><span class="tag tag-cancelled">Cancelled</span></td>
+                            <td style="color: var(--accent-danger); font-weight: 800;">₹ {{ order.total }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </main>
+
+        <aside>
+            <div class="side-panel">
+                <h3>📦 Daily Inventory Stock</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">અહીં સ્ટોક લખીને Set કરો (0 થતાં આપોઆપ Sold Out થશે):</p>
+                
+                {% for item in items %}
+                <div class="breakdown-row">
+                    <div>
+                        <b>{{ item.name_en }}</b><br>
+                        <small style="color: var(--text-muted);">Current: <span id="current-stock-val-{{ item.id }}" style="font-weight: bold; color: var(--accent-success);">{{ item.stock }}</span> Left</small>
+                    </div>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        <input type="number" id="stock-input-{{ item.id }}" value="{{ item.stock }}" style="width: 60px; padding: 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text-main); font-weight: bold; text-align: center;">
+                        <button onclick="saveItemDailyStock({{ item.id }})" class="btn-action done" style="padding: 6px 10px; font-size: 0.8rem;">Set</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="side-panel" style="margin-top: 20px;">
+                <h3>📈 Product Sales Performance</h3>
+                <div id="product-breakdown-list">
+                    <p style="color: var(--text-muted); font-size: 0.85rem; font-style: italic;">No sales recorded for this selection.</p>
                 </div>
             </div>
-
-            <!-- 2. COMPLETED ORDERS (FILTERED BY DATE) -->
-            <div id="completed-orders" class="history-section">
-                <div class="table-container">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="background: #f1f2f6;">
-                                <th style="padding: 10px;">Customer</th>
-                                <th style="padding: 10px;">Items</th>
-                                <th style="padding: 10px;">Payment</th>
-                                <th style="padding: 10px;">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for order in orders if order.status == 'Completed' %}
-                            <tr class="date-filtered-row" data-type="{{ order.order_type or 'Offline' }}" data-amount="{{ order.total }}" data-payment="{{ order.payment_mode or 'Cash' }}" data-status="{{ order.status }}" data-timestamp="{{ order.date or order.timestamp or '' }}" style="border-bottom: 1px solid #ddd; background: #f0fff4;">
-                                <td style="padding: 10px;">
-                                    👤 <strong>{{ order.customer_name }}</strong> 
-                                    {% if order.order_type == 'Online' %}(🛵 Online){% else %}(Table {{ order.table_no }}){% endif %}<br>
-                                    <small style="color: #747d8c;">⏰ {{ order.date or order.timestamp }}</small>
-                                </td>
-                                <td style="padding: 10px;">
-                                    {% for item in order['items'] %}
-                                        {{ item.name if item is mapping else item }} (x{{ item.qty if item is mapping else 1 }}), 
-                                    {% endfor %}
-                                </td>
-                                <td style="padding: 10px;">
-                                    <span class="pay-badge {{ 'pay-online' if order.payment_mode == 'Online' else 'pay-cash' }}">{{ order.payment_mode }}</span>
-                                </td>
-                                <td style="padding: 10px; color: #2ed573; font-weight: bold;">₹ {{ order.total }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- 3. PENDING ORDERS (FILTERED BY DATE) -->
-            <div id="pending-orders" class="history-section">
-                <div class="table-container">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="background: #f1f2f6; text-align: left;">
-                                <th style="padding: 10px;">Type & Customer</th>
-                                <th style="padding: 10px;">Items</th>
-                                <th style="padding: 10px;">Payment</th>
-                                <th style="padding: 10px;">Total</th>
-                                <th style="padding: 10px;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for order in orders if order.status == 'Pending' %}
-                            <tr class="date-filtered-row" data-type="{{ order.order_type or 'Offline' }}" data-amount="{{ order.total }}" data-payment="{{ order.payment_mode or 'Cash' }}" data-status="{{ order.status }}" data-timestamp="{{ order.date or order.timestamp or '' }}" style="border-bottom: 1px solid #ddd; background: #fffdf0;">
-                                <td style="padding: 10px;">
-                                    {% if order.order_type == 'Online' %}
-                                        <span class="type-badge type-online">🛵 Online Delivery</span><br>
-                                        <strong>👤 {{ order.customer_name }}</strong><br>
-                                        <small>📞 {{ order.phone }}</small><br>
-                                        <small style="color: #ff4757;">📍 {{ order.address }}</small><br>
-                                    {% else %}
-                                        <span class="type-badge type-offline">🍽️ Dine-In</span><br>
-                                        <strong>👤 {{ order.customer_name }}</strong><br>
-                                        <span style="background: #2f3542; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem;">📍 Table {{ order.table_no }}</span><br>
-                                    {% endif %}
-                                    <small style="color: #747d8c;">⏰ {{ order.date or order.timestamp }}</small>
-                                    {% if order.notes %}
-                                        <br><span style="color: #ff4757; font-weight: bold; background: #ffe0e3; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px;">✍️ {{ order.notes }}</span>
-                                    {% endif %}
-                                </td>
-                                <td style="padding: 10px;">
-                                    <ul style="padding-left: 15px; margin: 0;">
-                                        {% for item in order['items'] %}
-                                        <li>{{ item.name if item is mapping else item }} (x{{ item.qty if item is mapping else 1 }})</li>
-                                        {% endfor %}
-                                    </ul>
-                                </td>
-                                <td style="padding: 10px;">
-                                    {% if order.payment_mode == 'Online' %}
-                                        <span class="pay-badge pay-online">💳 Online UPI</span>
-                                    {% else %}
-                                        <span class="pay-badge pay-cash">💵 Cash</span>
-                                    {% endif %}
-                                </td>
-                                <td style="padding: 10px; font-weight: bold; color: #2ed573;">₹ {{ order.total }}</td>
-                                <td style="padding: 10px;">
-                                    <a href="{{ url_for('complete_order', order_id=order.id) }}" class="btn-complete">✅ Mark Complete</a>
-                                    <a href="{{ url_for('cancel_order', order_id=order.id) }}" class="btn-cancel" onclick="return confirm('Cancel order?')">❌ Cancel</a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- 4. CANCELLED ORDERS (FILTERED BY DATE) -->
-            <div id="cancelled-orders" class="history-section">
-                <div class="table-container">
-                    <table style="width: 100%; border-collapse: collapse;">
-                        <thead>
-                            <tr style="background: #f1f2f6;">
-                                <th style="padding: 10px;">Customer</th>
-                                <th style="padding: 10px;">Payment</th>
-                                <th style="padding: 10px;">Status</th>
-                                <th style="padding: 10px;">Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for order in orders if order.status == 'Cancelled' %}
-                            <tr class="date-filtered-row" data-type="{{ order.order_type or 'Offline' }}" data-amount="0" data-payment="{{ order.payment_mode or 'Cash' }}" data-status="{{ order.status }}" data-timestamp="{{ order.date or order.timestamp or '' }}" style="border-bottom: 1px solid #ddd; background: #ffe0e3;">
-                                <td style="padding: 10px;">
-                                    👤 <strong>{{ order.customer_name }}</strong> 
-                                    {% if order.order_type == 'Online' %}(🛵 Online){% else %}(Table {{ order.table_no }}){% endif %}<br>
-                                    <small style="color: #747d8c;">⏰ {{ order.date or order.timestamp }}</small>
-                                </td>
-                                <td style="padding: 10px;">{{ order.payment_mode }}</td>
-                                <td style="padding: 10px;"><span class="badge badge-cancelled">🔴 Cancelled</span></td>
-                                <td style="padding: 10px; color: #ff4757; font-weight: bold;">₹ {{ order.total }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- DYNAMIC PRODUCT SALES BREAKDOWN (DATE WISE) -->
-        <div class="panel report-panel" style="flex: 1; min-width: 250px; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-            <h3>📈 Product Sales Breakdown</h3>
-            <ul id="product-breakdown-list" style="list-style: none; padding: 0;">
-                <li style="color: #747d8c; font-style: italic;">No sales for selected date</li>
-            </ul>
-        </div>
+        </aside>
 
     </div>
 
 </div>
-
-<audio id="kitchenAudio" loop preload="auto">
-    <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg">
-</audio>
 
 <script>
     let currentSelectedMode = 'ALL';
     let globalRawOrders = [];
+    let alarmTimer = null;
+    let audioCtx = null;
+    let isInitialFetchDone = false;
 
     try {
         globalRawOrders = JSON.parse('{{ orders | tojson | safe }}');
@@ -414,70 +527,247 @@
         globalRawOrders = [];
     }
 
+    function getAudioContext() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        return audioCtx;
+    }
+
+    function playTone(freq, startTime, duration) {
+        try {
+            const ctx = getAudioContext();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+
+            gain.gain.setValueAtTime(0.7, ctx.currentTime + startTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + duration);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start(ctx.currentTime + startTime);
+            osc.stop(ctx.currentTime + startTime + duration);
+        } catch(e) {}
+    }
+
+    function playChimeBell() {
+        playTone(659.25, 0, 0.4);
+        playTone(523.25, 0.18, 0.6);
+    }
+
+    function playWarningTone() {
+        playTone(850, 0, 0.2);
+        playTone(450, 0.2, 0.4);
+    }
+
+    function speakVoiceAlert(text) {
+        try {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                let msg = new SpeechSynthesisUtterance(text);
+                msg.rate = 1.0;
+                msg.pitch = 1.05;
+                msg.volume = 1.0;
+                window.speechSynthesis.speak(msg);
+            }
+        } catch (e) {}
+    }
+
+    function startContinuousAlarm(voiceMsg, isAlert = false) {
+        if (isAlert) playWarningTone();
+        else playChimeBell();
+
+        speakVoiceAlert(voiceMsg);
+
+        if (alarmTimer) clearInterval(alarmTimer);
+        alarmTimer = setInterval(() => {
+            if (isAlert) playWarningTone();
+            else playChimeBell();
+            speakVoiceAlert(voiceMsg);
+        }, 3500);
+    }
+
+    function stopContinuousAlarm() {
+        if (alarmTimer) {
+            clearInterval(alarmTimer);
+            alarmTimer = null;
+        }
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
+    }
+
+    function toggleDarkMode() {
+        document.body.classList.toggle('light-mode');
+        let isLight = document.body.classList.contains('light-mode');
+        localStorage.setItem('admin_theme', isLight ? 'light' : 'dark');
+        document.getElementById('theme-btn-id').innerText = isLight ? '🌙 Dark Mode' : '☀️ Light Mode';
+    }
+
+    function toggleKitchenAlertMode(isChecked) {
+        getAudioContext();
+        localStorage.setItem("is_kitchen_device", isChecked ? "true" : "false");
+        updateDeviceStatusUI();
+        if (isChecked) {
+            playChimeBell();
+            speakVoiceAlert("Kitchen audio alert activated");
+            Swal.fire({
+                icon: 'success',
+                title: '🔊 Kitchen Audio Active',
+                text: 'New Order, Edit અને Cancel પર લાઈવ વોઇસ એલર્ટ વાગશે!',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        } else {
+            stopContinuousAlarm();
+        }
+    }
+
+    function updateDeviceStatusUI() {
+        let isKitchen = localStorage.getItem("is_kitchen_device") === "true";
+        let toggleSwitch = document.getElementById("kitchenToggleSwitch");
+        let badge = document.getElementById("deviceStatusText");
+        
+        if (toggleSwitch) toggleSwitch.checked = isKitchen;
+
+        if (isKitchen) {
+            badge.innerText = `📱 Mode: Kitchen Alert Active (Sound & Voice Active)`;
+            badge.style.color = "#10b981";
+        } else {
+            badge.innerText = `💻 Mode: Silent / Laptop Mode (Alerts Silenced)`;
+            badge.style.color = "var(--text-muted)";
+        }
+    }
+
+    function saveItemDailyStock(itemId) {
+        let newStockVal = document.getElementById(`stock-input-${itemId}`).value;
+        
+        fetch('/update-stock', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item_id: itemId, stock: newStockVal })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === "success") {
+                document.getElementById(`current-stock-val-${itemId}`).innerText = newStockVal;
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Stock Updated!',
+                    text: `Daily stock limit set to ${newStockVal}`,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            }
+        });
+    }
+
+    function openEditOrderModal(orderId, name, table, total, notes) {
+        Swal.fire({
+            title: `✏️ Edit Order #${orderId}`,
+            html: `
+                <div style="text-align: left; font-size: 0.9rem;">
+                    <label style="font-weight:bold;">Customer Name:</label>
+                    <input id="edit-name" class="swal2-input" value="${name}">
+                    <label style="font-weight:bold; margin-top:10px; display:block;">Table / Address:</label>
+                    <input id="edit-table" class="swal2-input" value="${table}">
+                    <label style="font-weight:bold; margin-top:10px; display:block;">Total (₹):</label>
+                    <input id="edit-total" class="swal2-input" value="${total}">
+                    <label style="font-weight:bold; margin-top:10px; display:block;">Special Notes:</label>
+                    <input id="edit-notes" class="swal2-input" value="${notes}">
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Save 💾',
+            preConfirm: () => {
+                return {
+                    name: document.getElementById('edit-name').value,
+                    table: document.getElementById('edit-table').value,
+                    total: document.getElementById('edit-total').value,
+                    notes: document.getElementById('edit-notes').value
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/edit-order/${orderId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(result.value)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        Swal.fire('Updated!', 'Order saved.', 'success');
+                    }
+                });
+            }
+        });
+    }
+
+    function cancelOrderDirect(orderId) {
+        if (confirm('આ ઓર્ડર કેન્સલ કરવો છે?')) {
+            fetch(`/cancel-order/${orderId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        Swal.fire('Cancelled!', 'Order has been cancelled.', 'success');
+                    }
+                });
+        }
+    }
+
     function getTodayYMD() {
         let d = new Date();
         let month = '' + (d.getMonth() + 1);
         let day = '' + d.getDate();
         let year = d.getFullYear();
-
         if (month.length < 2) month = '0' + month;
         if (day.length < 2) day = '0' + day;
-
         return [year, month, day].join('-');
     }
 
     function matchDateExact(timestampStr, targetYMD) {
         if (!timestampStr || !targetYMD) return false;
-
         let parts = targetYMD.split('-');
-        let yyyy = parts[0];
-        let mm = parts[1];
-        let dd = parts[2];
-
-        let format1 = `${yyyy}-${mm}-${dd}`;
-        let format2 = `${dd}/${mm}/${yyyy}`;
-        let format3 = `${dd}-${mm}-${yyyy}`;
-
+        let format1 = `${parts[0]}-${parts[1]}-${parts[2]}`;
+        let format2 = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        let format3 = `${parts[2]}-${parts[1]}-${parts[0]}`;
         let cleanStr = timestampStr.trim();
         return cleanStr.includes(format1) || cleanStr.includes(format2) || cleanStr.includes(format3);
+    }
+
+    function handleDateEnter(e) {
+        if (e.key === 'Enter') applyDateFilterProcess();
     }
 
     function resetToTodayDate() {
         let today = getTodayYMD();
         document.getElementById('filter-date-input').value = today;
+        sessionStorage.setItem('admin_selected_date', today);
         applyDateFilterProcess();
     }
 
     function applyDateFilterProcess() {
         let selectedDate = document.getElementById('filter-date-input').value;
-        
-        let selectedDateSales = 0;
-        let cashSales = 0;
-        let onlineSales = 0;
-        let totalSales = 0;
+        if (selectedDate) sessionStorage.setItem('admin_selected_date', selectedDate);
 
-        let countCompleted = 0;
-        let countPending = 0;
-        let countCancelled = 0;
-
+        let selectedDateSales = 0, cashSales = 0, onlineSales = 0, totalSales = 0;
+        let countCompleted = 0, countPending = 0, countCancelled = 0;
         let itemCounts = {};
 
-        // 1. "ALL ORDERS" TAB: SHOW ALL ORDERS ALWAYS (NEVER FILTERED BY DATE)
-        let allOrdersRows = document.querySelectorAll('.all-orders-row');
-        allOrdersRows.forEach(row => {
+        document.querySelectorAll('.all-orders-row').forEach(row => {
             let rowType = row.getAttribute('data-type') || 'Offline';
             let isModeMatch = (currentSelectedMode === 'ALL' || rowType.toLowerCase() === currentSelectedMode.toLowerCase());
-            
-            if (isModeMatch) {
-                row.style.display = 'table-row';
-            } else {
-                row.style.display = 'none';
-            }
+            row.style.display = isModeMatch ? 'table-row' : 'none';
         });
 
-        // 2. OTHER TABS (COMPLETED, PENDING, CANCELLED): FILTER STRICTLY BY DATE & MODE
-        let dateFilteredRows = document.querySelectorAll('.date-filtered-row');
-        dateFilteredRows.forEach(row => {
+        document.querySelectorAll('.date-filtered-row').forEach(row => {
             let rowType = row.getAttribute('data-type') || 'Offline';
             let status = row.getAttribute('data-status') || '';
             let timestamp = row.getAttribute('data-timestamp') || '';
@@ -487,8 +777,6 @@
 
             if (isModeMatch && isDateMatch) {
                 row.style.display = 'table-row';
-
-                // TAB COUNTERS
                 if (status.toLowerCase() === 'completed') countCompleted++;
                 if (status.toLowerCase() === 'pending') countPending++;
                 if (status.toLowerCase() === 'cancelled') countCancelled++;
@@ -497,12 +785,10 @@
             }
         });
 
-        // UPDATE TAB COUNTS
         document.getElementById('cnt-completed').innerText = countCompleted;
         document.getElementById('cnt-pending').innerText = countPending;
         document.getElementById('cnt-cancelled').innerText = countCancelled;
 
-        // 3. SALES CARDS & PRODUCT BREAKDOWN FOR SELECTED DATE
         if (Array.isArray(globalRawOrders)) {
             globalRawOrders.forEach(order => {
                 let orderType = order.order_type || 'Offline';
@@ -517,23 +803,14 @@
                 if (isModeMatch && isDateMatch && status.toLowerCase() !== 'cancelled') {
                     totalSales += amt;
                     selectedDateSales += amt;
-
-                    if (payMode.toLowerCase() === 'online') {
-                        onlineSales += amt;
-                    } else {
-                        cashSales += amt;
-                    }
+                    if (payMode.toLowerCase() === 'online') onlineSales += amt;
+                    else cashSales += amt;
 
                     if (Array.isArray(order.items)) {
                         order.items.forEach(item => {
                             let itemName = (typeof item === 'object' && item.name) ? item.name : item;
                             let itemQty = (typeof item === 'object' && item.qty) ? parseInt(item.qty) : 1;
-
-                            if (itemCounts[itemName]) {
-                                itemCounts[itemName] += itemQty;
-                            } else {
-                                itemCounts[itemName] = itemQty;
-                            }
+                            itemCounts[itemName] = (itemCounts[itemName] || 0) + itemQty;
                         });
                     }
                 }
@@ -547,204 +824,182 @@
 
         let breakdownList = document.getElementById('product-breakdown-list');
         breakdownList.innerHTML = '';
-
         let itemsArray = Object.keys(itemCounts);
         if (itemsArray.length > 0) {
             itemsArray.forEach(name => {
-                let li = document.createElement('li');
-                li.style.cssText = "padding: 10px; background: #f8f9fa; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between;";
-                li.innerHTML = `<span>${name}</span><strong>${itemCounts[name]} Qty</strong>`;
-                breakdownList.appendChild(li);
+                let row = document.createElement('div');
+                row.className = "breakdown-row";
+                row.innerHTML = `<span><b>${name}</b></span><span style="font-weight:800; color:var(--accent-primary);">${itemCounts[name]} Qty</span>`;
+                breakdownList.appendChild(row);
             });
         } else {
-            breakdownList.innerHTML = `<li style="color: #747d8c; font-style: italic;">No sales for selected date</li>`;
+            breakdownList.innerHTML = `<p style="color: var(--text-muted); font-size: 0.85rem; font-style: italic;">No sales recorded for this selection.</p>`;
         }
     }
 
     function setDashboardMode(mode, btn) {
-        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.segment-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentSelectedMode = mode;
         applyDateFilterProcess();
     }
 
-    async function openDownloadPopup() {
-        let todayYMD = getTodayYMD();
-
-        const { value: formValues } = await Swal.fire({
-            title: '📥 Download Sales Statement',
-            html: `
-                <div style="text-align: left; font-weight: bold; margin-bottom: 15px;">
-                    <label style="display:block; margin-bottom: 5px;">📅 From Date (ક્યાંથી):</label>
-                    <input id="swal-from-date" type="date" class="swal2-input" value="${todayYMD}" style="width: 80%; margin: 0 0 15px 0;">
-                    
-                    <label style="display:block; margin-bottom: 5px;">📅 To Date (ક્યાં સુધી):</label>
-                    <input id="swal-to-date" type="date" class="swal2-input" value="${todayYMD}" style="width: 80%; margin: 0;">
-                </div>
-            `,
-            focusConfirm: false,
-            showCancelButton: true,
-            confirmButtonText: '📥 Download CSV',
-            cancelButtonText: 'Cancel',
-            confirmButtonColor: '#2ed573',
-            preConfirm: () => {
-                return [
-                    document.getElementById('swal-from-date').value,
-                    document.getElementById('swal-to-date').value
-                ]
-            }
-        });
-
-        if (formValues) {
-            let [fromDate, toDate] = formValues;
-            if (!fromDate || !toDate) {
-                Swal.fire({ icon: 'error', title: 'ભૂલ!', text: 'બંને તારીખ સિલેક્ટ કરવી જરૂરી છે.' });
-                return;
-            }
-            generateAndDownloadCSV(fromDate, toDate);
-        }
-    }
-
-    function generateAndDownloadCSV(fromDate, toDate) {
-        let csvContent = "Order ID,Customer Name,Type,Payment Mode,Status,Date & Time,Total Amount\n";
-        let count = 0;
-
-        if (Array.isArray(globalRawOrders)) {
-            globalRawOrders.forEach((o, idx) => {
-                let timestamp = o.date || o.timestamp || '';
-                let status = o.status || '';
-
-                let type = o.order_type || 'Offline';
-                let amt = o.total || '0';
-                let payMode = o.payment_mode || 'Cash';
-                let name = o.customer_name || 'Customer';
-
-                csvContent += `"#${idx + 1}","${name}","${type}","${payMode}","${status}","${timestamp}","₹ ${amt}"\n`;
-                count++;
-            });
-        }
-
-        if (count === 0) {
-            Swal.fire({ icon: 'info', title: 'No Orders Found', text: `કોઈ ઓર્ડર નથી મળ્યો.` });
-            return;
-        }
-
-        let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        let url = URL.createObjectURL(blob);
-        let a = document.createElement('a');
-        a.href = url;
-        a.download = `Statement_${fromDate}_to_${toDate}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    }
-
     function switchTab(tabId, btn) {
-        document.querySelectorAll('.history-section').forEach(sec => sec.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        btn.classList.add('active');
+        document.querySelectorAll('.history-section').forEach(sec => sec.style.display = 'none');
+        document.querySelectorAll('.tab-item').forEach(b => b.classList.remove('active'));
+        
+        let section = document.getElementById(tabId);
+        if (section) section.style.display = 'block';
+        if (btn) btn.classList.add('active');
+        
+        sessionStorage.setItem('active_admin_tab', tabId);
     }
 
-    function updateDeviceStatusUI() {
-        let isKitchen = localStorage.getItem("is_kitchen_device");
-        let badge = document.getElementById("deviceStatusText");
-        if (isKitchen === "true") {
-            badge.innerText = `📱 Kitchen Device Active (Popup Enabled)`;
-            badge.style.background = "#eccc68";
-            badge.style.fontWeight = "bold";
-        } else {
-            badge.innerText = `💻 Current Mode: Laptop Mode (No Popups)`;
-            badge.style.background = "#f1f2f6";
-            badge.style.fontWeight = "normal";
-        }
-    }
-
-    function setupKitchenMobile() {
-        localStorage.setItem("is_kitchen_device", "true");
-        alert("✅ આ મોબાઈલ હવે Kitchen Mode માં સેટ થઈ ગયો છે!");
-        updateDeviceStatusUI();
-    }
-
-    function clearKitchenDevice() {
-        localStorage.setItem("is_kitchen_device", "false");
-        alert("💻 લેપટોપ મોડ સેટ થઈ ગયો છે.");
-        updateDeviceStatusUI();
-    }
-
-    let knownOrders = new Set();
-    if (Array.isArray(globalRawOrders)) {
-        globalRawOrders.forEach(o => {
-            let statusVal = o.status || 'Pending';
-            knownOrders.add(o.id + "_" + statusVal);
-        });
-    }
-
-    let isFirstCheck = true;
+    let orderSnapshotMap = {};
 
     function checkLiveOrders() {
         fetch('/admin-check-updates')
             .then(res => res.json())
             .then(data => {
-                if (data.status === "success" && data.orders) {
-                    data.orders.forEach(order => {
-                        let statusVal = order.status || 'Pending';
-                        let key = order.id + "_" + statusVal;
-                        
-                        if (!knownOrders.has(key) && !isFirstCheck) {
-                            knownOrders.add(key);
-                            triggerKitchenAlert(order);
-                        } else {
-                            knownOrders.add(key);
-                        }
-                    });
+                if (data.status === "success") {
+                    if (data.inventory && Array.isArray(data.inventory)) {
+                        data.inventory.forEach(invItem => {
+                            let stockValEl = document.getElementById(`current-stock-val-${invItem.id}`);
+                            let stockInpEl = document.getElementById(`stock-input-${invItem.id}`);
+                            if (stockValEl) stockValEl.innerText = invItem.stock;
+                            if (stockInpEl && document.activeElement !== stockInpEl) {
+                                stockInpEl.value = invItem.stock;
+                            }
+                        });
+                    }
 
-                    isFirstCheck = false;
+                    if (data.orders && Array.isArray(data.orders)) {
+                        data.orders.forEach(order => {
+                            let oid = String(order.id);
+                            let currentStatus = order.status || 'Pending';
+                            let currentTotal = Number(order.total);
+                            let currentRawItems = JSON.stringify(order.items || []);
+
+                            if (!orderSnapshotMap[oid]) {
+                                // 🌟 NEW ORDER
+                                orderSnapshotMap[oid] = { status: currentStatus, total: currentTotal, rawItems: currentRawItems };
+                                if (isInitialFetchDone) {
+                                    triggerOrderNotification(order, "NEW");
+                                }
+                            } else {
+                                let oldData = orderSnapshotMap[oid];
+                                
+                                if (oldData.status !== 'Cancelled' && currentStatus === 'Cancelled') {
+                                    // 🚫 CANCELLED ORDER
+                                    orderSnapshotMap[oid] = { status: currentStatus, total: currentTotal, rawItems: currentRawItems };
+                                    if (isInitialFetchDone) {
+                                        triggerOrderNotification(order, "CANCEL");
+                                    }
+                                } else if (oldData.status === 'Pending' && currentStatus === 'Pending' && (oldData.total !== currentTotal || oldData.rawItems !== currentRawItems)) {
+                                    // ✏️ EDITED ORDER
+                                    orderSnapshotMap[oid] = { status: currentStatus, total: currentTotal, rawItems: currentRawItems };
+                                    if (isInitialFetchDone) {
+                                        triggerOrderNotification(order, "EDIT");
+                                    }
+                                }
+                            }
+                        });
+
+                        globalRawOrders = data.orders;
+                        isInitialFetchDone = true;
+                        applyDateFilterProcess();
+                    }
                 }
             })
-            .catch(err => console.log("Checking updates..."));
+            .catch(() => {});
     }
 
-    function triggerKitchenAlert(order) {
-        let isKitchen = localStorage.getItem("is_kitchen_device");
-        if (isKitchen !== "true") return;
-
-        let audio = document.getElementById("kitchenAudio");
-        if (audio) {
-            audio.currentTime = 0;
-            audio.play().catch(e => console.log("Touch screen to enable sound"));
-        }
+    function triggerOrderNotification(order, type) {
+        if (localStorage.getItem("is_kitchen_device") !== "true") return;
 
         let alertModal = document.getElementById("kitchenAlertModal");
-        alertModal.classList.add("flashing-screen");
-        alertModal.style.display = "flex";
+        let titleEl = document.getElementById("kitchenAlertTitle");
+        let infoEl = document.getElementById("kitchenOrderInfo");
 
-        let info = ``;
-        if (order.order_type === 'Online') {
-            info = `🛵 ONLINE ORDER!<br>👤 Name: ${order.customer_name}<br>📞 Phone: ${order.phone}<br>📍 Address: ${order.address}<br>🆔 Order ID: #${order.id}`;
-        } else {
-            info = `📍 Table No: ${order.table_no}<br>👤 Name: ${order.customer_name}<br>💳 Payment: ${order.payment_mode}<br>🆔 Order ID: #${order.id}`;
+        let locInfo = order.order_type === 'Online' ? `Online Delivery (${order.address})` : `Table ${order.table_no}`;
+
+        if (type === "NEW") {
+            titleEl.innerText = "🚨 NEW ORDER RECEIVED!";
+            titleEl.style.color = "#10b981";
+            infoEl.innerHTML = `👤 <b>Customer:</b> ${order.customer_name}<br>📍 <b>Location:</b> ${locInfo}<br>💰 <b>Total:</b> ₹${order.total}<br>🆔 <b>Order ID:</b> #${order.id}`;
+            startContinuousAlarm("New order received!", false);
+        } else if (type === "EDIT") {
+            titleEl.innerText = "✏️ ORDER UPDATED / EDITED!";
+            titleEl.style.color = "#f59e0b";
+            infoEl.innerHTML = `👤 <b>Customer:</b> ${order.customer_name}<br>📍 <b>Location:</b> ${locInfo}<br>💰 <b>New Total:</b> ₹${order.total}<br>🆔 <b>Order ID:</b> #${order.id}<br><span style="color:#f59e0b; font-size:0.9rem;">(Please check updated items in kitchen)</span>`;
+            startContinuousAlarm("Order updated! Please check kitchen changes.", true);
+        } else if (type === "CANCEL") {
+            titleEl.innerText = "❌ ORDER CANCELLED!";
+            titleEl.style.color = "#ef4444";
+            infoEl.innerHTML = `👤 <b>Customer:</b> ${order.customer_name}<br>📍 <b>Location:</b> ${locInfo}<br>🆔 <b>Order ID:</b> #${order.id}<br><span style="color:#ef4444; font-size:0.9rem;">(Stop preparation and refund ₹${order.total})</span>`;
+            startContinuousAlarm("Order cancelled! Stop preparation.", true);
         }
 
-        document.getElementById("kitchenOrderInfo").innerHTML = info;
+        if (alertModal) alertModal.style.display = "flex";
     }
 
     function stopKitchenAlert() {
-        let audio = document.getElementById("kitchenAudio");
-        if (audio) { audio.pause(); audio.currentTime = 0; }
+        stopContinuousAlarm();
         let alertModal = document.getElementById("kitchenAlertModal");
-        alertModal.classList.remove("flashing-screen");
-        alertModal.style.display = "none";
-        location.reload();
+        if (alertModal) alertModal.style.display = "none";
+    }
+
+    async function openDownloadPopup() {
+        let todayYMD = getTodayYMD();
+        const { value: formValues } = await Swal.fire({
+            title: '📥 Export Sales Statement',
+            html: `
+                <div style="text-align: left; font-weight: bold;">
+                    <label>From Date:</label>
+                    <input id="swal-from-date" type="date" class="swal2-input" value="${todayYMD}">
+                    <label style="margin-top:10px; display:block;">To Date:</label>
+                    <input id="swal-to-date" type="date" class="swal2-input" value="${todayYMD}">
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Export CSV',
+            preConfirm: () => [document.getElementById('swal-from-date').value, document.getElementById('swal-to-date').value]
+        });
+
+        if (formValues && formValues[0] && formValues[1]) {
+            let csvContent = "Order ID,Customer Name,Type,Payment Mode,Status,Date & Time,Total Amount\n";
+            globalRawOrders.forEach((o, idx) => {
+                csvContent += `"#${idx + 1}","${o.customer_name || 'Customer'}","${o.order_type || 'Offline'}","${o.payment_mode || 'Cash'}","${o.status || ''}","${o.date || o.timestamp || ''}","₹ ${o.total || '0'}"\n`;
+            });
+            let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = `Statement_${formValues[0]}_to_${formValues[1]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
     }
 
     document.addEventListener("DOMContentLoaded", function() {
-        document.getElementById('filter-date-input').value = getTodayYMD();
+        if (localStorage.getItem('admin_theme') === 'light') {
+            document.body.classList.add('light-mode');
+            document.getElementById('theme-btn-id').innerText = '🌙 Dark Mode';
+        }
+
+        let savedDate = sessionStorage.getItem('admin_selected_date') || getTodayYMD();
+        document.getElementById('filter-date-input').value = savedDate;
+
         updateDeviceStatusUI();
-        let defaultBtn = document.getElementById('mode-all');
-        if (defaultBtn) setDashboardMode('ALL', defaultBtn);
         applyDateFilterProcess();
-        checkLiveOrders();
+
+        let savedTab = sessionStorage.getItem('active_admin_tab') || 'all-orders';
+        let tabBtn = document.getElementById(`tab-btn-${savedTab}`);
+        if (tabBtn) switchTab(savedTab, tabBtn);
+
+        document.body.addEventListener('click', () => { getAudioContext(); }, { once: true });
+
         setInterval(checkLiveOrders, 3000);
     });
 </script>
