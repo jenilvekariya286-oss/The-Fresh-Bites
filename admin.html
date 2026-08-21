@@ -571,8 +571,9 @@
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 let msg = new SpeechSynthesisUtterance(text);
-                msg.rate = 1.0;
-                msg.pitch = 1.05;
+                msg.lang = 'en-US'; // અવાજ એકદમ શાર્પ અને ક્લિયર આવશે
+                msg.rate = 0.95;   // બોલવાની સ્પીડ સ્પષ્ટ થશે
+                msg.pitch = 1.0;
                 msg.volume = 1.0;
                 window.speechSynthesis.speak(msg);
             }
@@ -881,7 +882,6 @@
                             let currentRawItems = JSON.stringify(order.items || []);
 
                             if (!orderSnapshotMap[oid]) {
-                                // 🌟 NEW ORDER
                                 orderSnapshotMap[oid] = { status: currentStatus, total: currentTotal, rawItems: currentRawItems };
                                 if (isInitialFetchDone) {
                                     triggerOrderNotification(order, "NEW");
@@ -890,13 +890,11 @@
                                 let oldData = orderSnapshotMap[oid];
                                 
                                 if (oldData.status !== 'Cancelled' && currentStatus === 'Cancelled') {
-                                    // 🚫 CANCELLED ORDER
                                     orderSnapshotMap[oid] = { status: currentStatus, total: currentTotal, rawItems: currentRawItems };
                                     if (isInitialFetchDone) {
                                         triggerOrderNotification(order, "CANCEL");
                                     }
                                 } else if (oldData.status === 'Pending' && currentStatus === 'Pending' && (oldData.total !== currentTotal || oldData.rawItems !== currentRawItems)) {
-                                    // ✏️ EDITED ORDER
                                     orderSnapshotMap[oid] = { status: currentStatus, total: currentTotal, rawItems: currentRawItems };
                                     if (isInitialFetchDone) {
                                         triggerOrderNotification(order, "EDIT");
