@@ -15,8 +15,8 @@ app.secret_key = "the_fresh_bites_secret_key_2026"
 YOUR_UPI_ID = "jenillvekariya286@oksbi"
 YOUR_NAME = "The Fresh Bites"
 
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "1234"
+ADMIN_USERNAME = "Thefreshbite"
+ADMIN_PASSWORD = "Freshbite286"
 
 DEFAULT_MENU = [
     {"id": 1, "name_en": "Cheese Burger", "name_gu": "ચીઝ બર્ગર", "price": 99, "stock": 15},
